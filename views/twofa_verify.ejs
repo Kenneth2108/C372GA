@@ -3,35 +3,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FluffyFriend — 2FA Verify</title>
+  <title>FluffyFriend - 2FA Verify</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
   <style>
-    html, body { height: 100%; margin: 0; display: flex; flex-direction: column; }
-    main { flex: 1; }
     :root{
-      --pet-700:#c94b7b; --pet-600:#ff6fa3;
+      --pet-700:#c94b7b;
+      --pet-600:#ff6fa3;
+      --pet-200:#ffe3f0;
     }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, #fff 0%, #fff8fb 40%, #ffe1f1 100%);
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    }
+    main { flex: 1; }
     .bg-pink{ background: linear-gradient(90deg, var(--pet-600), var(--pet-700)) !important; }
     .btn-pink{ background-color: var(--pet-600) !important; border-color: var(--pet-600) !important; color:#fff !important;}
-    .btn-pink:hover{ filter: brightness(0.95); }
-    .navbar-brand { color: #fff; font-weight: 700; font-size: 1.3rem; }
+    .btn-pink:hover{ filter: brightness(0.94); }
+    .navbar-brand { color: #fff; font-weight: 700; font-size: 1.3rem; letter-spacing: 0.5px; }
     .navbar .nav-link { color: #fff !important; font-weight: 500; border-radius: 8px; padding: 8px 14px; transition: 0.3s ease; }
     .navbar .nav-link:hover { background-color: #ff8db8; color: #fff !important; }
     .navbar .navbar-toggler { border-color: rgba(255,255,255,.6); }
     .navbar .navbar-toggler-icon { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255,255,255,.9)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e"); }
-    footer { background: linear-gradient(90deg, #ff8db8, #ff6fa3); color: white; padding: 12px 0; margin-top: auto; }
+    .verify-wrapper { min-height: calc(100vh - 160px); display: flex; align-items: center; justify-content: center; padding: 2.5rem 1rem; }
+    .verify-card { border-radius: 26px; border: none; box-shadow: 0 25px 80px rgba(201, 75, 123, 0.18); background: #fff; }
+    .step-pill { background-color: rgba(201, 75, 123, 0.12); color: var(--pet-700); border-radius: 999px; padding: 0.35rem 1rem; letter-spacing: 0.1em; font-size: 0.75rem; }
+    .code-input { text-align: center; font-size: 1.35rem; font-weight: 600; letter-spacing: 0.5rem; padding-left: 1.6rem; }
+    .code-input::placeholder { letter-spacing: normal; font-weight: 400; }
+    .tip-box { background-color: #fff5fa; border: 1px dashed #ffcfe5; border-radius: 18px; }
+    .link-pink { color: var(--pet-700); }
+    .link-pink:hover { color: var(--pet-600); }
+    footer { background: linear-gradient(90deg, #ff8db8, #ff6fa3); color: white; padding: 12px 0; }
   </style>
 </head>
 
-<body class="bg-light">
+<body>
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg bg-pink">
     <div class="container">
-      <a class="navbar-brand fw-bold" href="/">🐾 FluffyFriend</a>
+      <a class="navbar-brand" href="/">FluffyFriend</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ffNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -43,35 +60,57 @@
     </div>
   </nav>
 
-  <main>
-  <div class="container" style="max-width:520px">
-    <div class="card shadow-sm mt-4">
-      <div class="card-body">
-        <h1 class="h4 mb-2">Two-Factor Verification</h1>
-        <p class="text-muted mb-3">Hi <%= name %>, enter the 6-digit code from your Authenticator app.</p>
+  <main class="verify-wrapper">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-6">
+          <div class="card verify-card">
+            <div class="card-body p-4 p-md-5">
+              <div class="text-center mb-4">
+                <span class="step-pill text-uppercase fw-semibold d-inline-block">Step 2 of 2</span>
+                <h1 class="h4 mt-3 mb-2">Two-Factor Verification</h1>
+                <p class="text-muted mb-0">Hi <%= name %>, enter the fresh 6-digit code from your authenticator app to finish signing in.</p>
+              </div>
 
-        <!-- Use numeric pattern with 6 digits -->
-        <form method="POST" action="/2fa/verify" class="d-flex gap-2">
-          <input name="token"
-                 class="form-control"
-                 placeholder="6-digit code"
-                 required
-                 maxlength="6"
-                 pattern="[0-9]{6}"
-                 inputmode="numeric"
-                 autocomplete="one-time-code">
-          <button class="btn btn-pink">Verify</button>
-        </form>
+              <!-- Use numeric pattern with 6 digits -->
+              <form method="POST" action="/2fa/verify" class="input-group input-group-lg mb-4">
+                <input name="token"
+                       class="form-control code-input"
+                       placeholder="123456"
+                       required
+                       maxlength="6"
+                       pattern="[0-9]{6}"
+                       inputmode="numeric"
+                       autocomplete="one-time-code">
+                <button type="submit" class="btn btn-pink px-4">Verify</button>
+              </form>
+
+              <div class="tip-box p-3 mb-4 text-muted small">
+                <strong>Heads up:</strong> the digits refresh every 30 seconds. If a code fails, wait for the next one and try again right away.
+              </div>
+
+              <ol class="text-muted small ps-3 mb-4">
+                <li>Open your authenticator app.</li>
+                <li>Find the FluffyFriend entry and copy the 6 digits.</li>
+                <li>Type them above before the timer resets.</li>
+              </ol>
+
+              <div class="d-flex flex-column flex-sm-row justify-content-between gap-2 small text-muted">
+                <span>Need help? <a class="link-pink text-decoration-none" href="/login">Sign in another way</a></span>
+                <span>Lost your device? Contact support to reset 2FA.</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
   </main>
 
   <!-- Footer -->
   <footer>
     <div class="container d-flex justify-content-between align-items-center">
-      <small>© <%= new Date().getFullYear() %> FluffyFriend.</small>
-      <small>Made with ♥ in a pink theme.</small>
+      <small>&copy; <%= new Date().getFullYear() %> FluffyFriend.</small>
+      <small>Made with &hearts; in a pink theme.</small>
     </div>
   </footer>
 
