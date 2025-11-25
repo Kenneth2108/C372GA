@@ -90,7 +90,7 @@ exports.getProductById = function (req, res) {
       return res.redirect('/admin/products');
     }
 
-    res.render('admin/product-edit', {
+    res.render('admin/product_edit', {
       product: product,
       success: req.flash('success'),
       error: req.flash('error')
