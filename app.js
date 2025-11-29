@@ -90,12 +90,6 @@ app.post('/2fa/verify', userCtrl.twofaVerify);
 /* ---------- Logout ---------- */
 app.get('/logout', userCtrl.logout);
 
-//(Isaac Start )
-/* ---------- Example protected page ---------- */
-/* ---------- Storefront: all products (public) ---------- */
-app.get('/products', productCtrl.showStore);
-//(Isaac End )
-
 /* ---------- Admin dashboard ---------- */
 app.get('/admin', checkAuthenticated, checkAdmin, userCtrl.adminDashboard);
 
@@ -110,12 +104,18 @@ app.post('/admin/users/:id/delete', checkAuthenticated, checkAdmin, userCtrl.del
 
 //(Isaac Start )
 /* ---------- Admin: Products CRU ---------- */
+//(Isaac Start )
+/* ---------- Example protected page ---------- */
+/* ---------- Storefront: all products (public) ---------- */
+app.get('/products', productCtrl.showStore);
+//(Isaac End )
 app.get('/admin/products', checkAuthenticated, checkAdmin, productCtrl.getAllProducts); // render admin/products.ejs
 app.get('/viewproduct/:id', productCtrl.showProductDetails); // View single product (front-end)
 app.get('/admin/products/new', checkAuthenticated, checkAdmin, productCtrl.newProductForm); // render admin/product-add.ejs
 app.post('/admin/products', checkAuthenticated, checkAdmin, upload.single('image'), productCtrl.addProduct);
 app.get('/admin/products/:id/edit', checkAuthenticated, checkAdmin, productCtrl.getProductById); // render admin/product-edit.ejs
 app.post('/admin/products/:id/edit', checkAuthenticated, checkAdmin, upload.single('image'), productCtrl.updateProduct);
+
 //(Isaac End )
 
 
