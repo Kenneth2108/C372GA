@@ -12,7 +12,10 @@ const multer = require('multer');
 //(Isaac End )
 const connection = require('./db');
 const app = express();
-//(Kenneth End) 
+//(Kenneth End)
+//(Thrish Start)
+const CartItemsController = require('./controllers/CartItemController');
+//(Thrish End)
 
 //(Kenneth Start) 
 /* ---------- View + forms + static ---------- */
@@ -119,7 +122,20 @@ app.post('/admin/products/:id/edit', checkAuthenticated, checkAdmin, upload.sing
 //(Isaac End )
 
 
+//(Thrish Start)
+/* ---------- Cart routes ---------- */
+app.get('/cart', checkAuthenticated, CartItemsController.list);
+app.post('/cart/add', checkAuthenticated, CartItemsController.add);
+app.post('/cart/remove', checkAuthenticated, CartItemsController.remove);
+app.post('/cart/clear', checkAuthenticated, CartItemsController.clear);
 
+// Compatibility route: allow legacy forms that POST to /add-to-cart/:id
+app.post('/add-to-cart/:id', checkAuthenticated, (req, res, next) => {
+    // support different field names: fineId, productId or params.id
+    req.body.fineId = req.body.fineId || req.body.productId || req.params.id;
+    return CartItemsController.add(req, res, next);
+});
+//(Thrish End)
 
 //(Kenneth Start) 
 /* ---------- Start server ---------- */
