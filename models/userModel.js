@@ -108,6 +108,17 @@ function updateUser(id, { username, email, address, contact, role }, cb) {
 }
 
 /**
+ * Update only role
+ */
+function updateUserRole(id, role, cb) {
+  const sql = 'UPDATE users SET role=? WHERE id=?';
+  db.query(sql, [role, id], (err, result) => {
+    if (err) return cb(err);
+    return cb(null, result);
+  });
+}
+
+/**
  * Delete user
  */
 function deleteUser(id, cb) {
@@ -127,6 +138,6 @@ module.exports = {
   setTwoFA,
   updateUserWithPassword,
   updateUser,
+  updateUserRole,
   deleteUser,
 };
-

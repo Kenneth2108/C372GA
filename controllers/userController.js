@@ -1,18 +1,46 @@
 const Users = require('../models/userModel');
 
+// Password strength: min 6 with upper, lower, and number
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
+function isStrongPassword(pwd) {
+  return typeof pwd === 'string' && passwordRegex.test(pwd);
+}
+
+// Phone number: exactly 8 digits
+const phoneRegex = /^\d{8}$/;
+function isValidPhone(phone) {
+  return typeof phone === 'string' && phoneRegex.test(phone);
+}
+
 // ----------------------- Admin: Users CRUD -----------------------
 
 // List users (callback style)
 function listUsers(req, res) {
+  const search = (req.query.q || '').trim().toLowerCase();
+
   Users.listUsers(function (err, users) {
     if (err) {
       console.error(err);
       req.flash('error', 'Failed to load users');
       return res.redirect('/admin');
     }
+    let filteredUsers = users;
+    if (search) {
+      filteredUsers = users.filter(function (u) {
+        const username = (u.username || '').toLowerCase();
+        const email = (u.email || '').toLowerCase();
+        const contact = (u.contact || '').toString().toLowerCase();
+        return (
+          username.includes(search) ||
+          email.includes(search) ||
+          contact.includes(search)
+        );
+      });
+    }
     res.render('admin_users_index', {
       user: req.session.user,
-      users: users,
+      users: filteredUsers,
+      searchQuery: req.query.q || '',
       success: req.flash('success'),
       error: req.flash('error')
     });
@@ -41,6 +69,14 @@ function createUser(req, res) {
 
   if (!username || !email || !password || !address || !contact || !role) {
     req.flash('error', 'All fields are required.');
+    return res.redirect('/admin/users/new');
+  }
+  if (!isValidPhone(contact)) {
+    req.flash('error', 'Contact number must be exactly 8 digits.');
+    return res.redirect('/admin/users/new');
+  }
+  if (!isStrongPassword(password)) {
+    req.flash('error', 'Password must be at least 6 characters and include uppercase, lowercase, and a number.');
     return res.redirect('/admin/users/new');
   }
 
@@ -97,9 +133,17 @@ function updateUser(req, res) {
     req.flash('error', 'Missing required fields.');
     return res.redirect('/admin/users/' + id + '/edit');
   }
+  if (!isValidPhone(body.contact)) {
+    req.flash('error', 'Contact number must be exactly 8 digits.');
+    return res.redirect('/admin/users/' + id + '/edit');
+  }
 
   // If password provided, update with password; else without
   if (body.password && body.password.length > 0) {
+    if (!isStrongPassword(body.password)) {
+      req.flash('error', 'Password must be at least 6 characters and include uppercase, lowercase, and a number.');
+      return res.redirect('/admin/users/' + id + '/edit');
+    }
     Users.updateUserWithPassword(
       id,
       {
@@ -157,6 +201,44 @@ function deleteUser(req, res) {
   });
 }
 
+// Update role (admin quick action)
+function updateUserRole(req, res) {
+  const id = req.params.id;
+  const role = req.body.role;
+  const allowedRoles = ['admin', 'user'];
+
+  if (!role || allowedRoles.indexOf(role) === -1) {
+    req.flash('error', 'Invalid role selected.');
+    return res.redirect('/admin/users');
+  }
+  if (req.session.user && String(req.session.user.id) === String(id)) {
+    req.flash('error', 'You cannot change your own role.');
+    return res.redirect('/admin/users');
+  }
+
+  Users.getById(id, function (err, target) {
+    if (err || !target) {
+      console.error(err);
+      req.flash('error', 'User not found.');
+      return res.redirect('/admin/users');
+    }
+    if (target.role === 'admin') {
+      req.flash('error', 'Admin roles cannot be edited.');
+      return res.redirect('/admin/users');
+    }
+
+    Users.updateUserRole(id, role, function (err2) {
+      if (err2) {
+        console.error(err2);
+        req.flash('error', 'Failed to update role.');
+        return res.redirect('/admin/users');
+      }
+      req.flash('success', 'Role updated.');
+      return res.redirect('/admin/users');
+    });
+  });
+}
+
 module.exports = {
   listUsers: listUsers,
   newUserForm: newUserForm,
@@ -164,6 +246,7 @@ module.exports = {
   editUserForm: editUserForm,
   updateUser: updateUser,
   deleteUser: deleteUser,
+  updateUserRole: updateUserRole,
 };
 
 // ----------------------- Public / Auth handlers -----------------------
@@ -217,8 +300,13 @@ module.exports.register = function (req, res) {
     req.flash('formData', body);
     return res.redirect('/register');
   }
-  if (password.length < 6) {
-    req.flash('error', 'Password must be at least 6 characters.');
+  if (!isValidPhone(contact)) {
+    req.flash('error', 'Contact number must be exactly 8 digits.');
+    req.flash('formData', body);
+    return res.redirect('/register');
+  }
+  if (!isStrongPassword(password)) {
+    req.flash('error', 'Password must be at least 6 characters and include uppercase, lowercase, and a number.');
     req.flash('formData', body);
     return res.redirect('/register');
   }

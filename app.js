@@ -1,25 +1,42 @@
 //(Kenneth Start) 
 const express = require('express');
 const userCtrl = require('./controllers/userController');
+const checkoutCtrl = require('./controllers/checkoutController');
+const orderCtrl = require('./controllers/orderController');
+const contactCtrl = require('./controllers/contactController');
+
+//(Kenneth End) 
+
+
 //(Isaac Start )
 const productCtrl = require('./controllers/productController');
-const contactCtrl = require('./controllers/contactController');
+
 //(Isaac End )
+
+
+//(Kenneth Start) 
 const connection = require('./db');
 const app = express();
 const {
   registerMiddleware,
   checkAuthenticated,
   checkAdmin,
+  checkUser,
   upload
 } = require('./middleware');
 //(Kenneth End)
+
+// Register common middleware (views, static, session, flash)
+registerMiddleware(app);
+
 //(Thrish Start)
 const CartItemsController = require('./controllers/CartItemController');
 //(Thrish End)
 
-// Register common middleware (views, static, session, flash)
-registerMiddleware(app);
+/* ---------- Checkout ---------- */
+app.post('/checkout', checkAuthenticated, checkoutCtrl.generateInvoice);
+app.get('/invoice', checkAuthenticated, checkoutCtrl.showInvoice);
+app.get('/orders', checkAuthenticated, checkUser, orderCtrl.listUserOrders);
 
 /* ---------- Core pages ---------- */
 // Home
@@ -66,7 +83,10 @@ app.get('/admin/users/new',       checkAuthenticated, checkAdmin, userCtrl.newUs
 app.post('/admin/users',          checkAuthenticated, checkAdmin, userCtrl.createUser);
 app.get('/admin/users/:id/edit',  checkAuthenticated, checkAdmin, userCtrl.editUserForm);
 app.post('/admin/users/:id/edit', checkAuthenticated, checkAdmin, userCtrl.updateUser);
+app.post('/admin/users/:id/role', checkAuthenticated, checkAdmin, userCtrl.updateUserRole);
 app.post('/admin/users/:id/delete', checkAuthenticated, checkAdmin, userCtrl.deleteUser);
+app.get('/admin/orders', checkAuthenticated, checkAdmin, orderCtrl.listAllOrders);
+
 //(Kenneth End) 
 
 //(Isaac Start )
@@ -105,4 +125,5 @@ app.post('/add-to-cart/:id', checkAuthenticated, (req, res, next) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('Server running at http://localhost:' + PORT));
 //(Kenneth End) 
+
 

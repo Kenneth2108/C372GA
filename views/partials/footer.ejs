@@ -1,6 +1,20 @@
-<footer class="py-3 mt-5" style="background: linear-gradient(90deg, #ff8db8, #ff6fa3); color: white;">
+<footer class="py-3 mt-5 ff-footer" style="background: linear-gradient(90deg, #ff8db8, #ff6fa3); color: white;">
   <div class="container d-flex justify-content-between align-items-center">
     <small>© <%= new Date().getFullYear() %> FluffyFriend.</small>
     <small>Made with <span style="color:#fff;">♥</span> in a pink theme.</small>
   </div>
 </footer>
+<style>
+  html {
+    min-height: 100%;
+  }
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .ff-footer {
+    margin-top: auto;
+    width: 100%;
+  }
+</style>

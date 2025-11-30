@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- updated by assistant -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -80,7 +81,38 @@
       margin-bottom: 15px;
     }
 
-    footer { background: linear-gradient(90deg, #ff8db8, #ff6fa3); color: white; padding: 12px 0; text-align: center; margin-top: auto; }
+    /* Floating contact button */
+    .fab-contact {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      background: linear-gradient(135deg, #ff8db8, #ff6fa3);
+      color: #fff;
+      padding: 14px 18px;
+      border-radius: 999px;
+      box-shadow: 0 12px 30px rgba(255,111,163,0.35);
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      z-index: 30;
+    }
+    .fab-contact:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 38px rgba(255,111,163,0.45);
+      color: #fff;
+    }
+    .fab-contact svg {
+      width: 18px;
+      height: 18px;
+    }
+    .logo-paw {
+      font-size: 1.3rem;
+      margin-left: 6px;
+    }
+
   </style>
 </head>
 
@@ -101,6 +133,9 @@
           <% if (user) { %>
             <li class="nav-item"><a class="nav-link" href="/UserProducts">View All Products</a></li>
             <li class="nav-item"><a class="nav-link" href="/cart">Go To Cart</a></li>
+            <% if (user.role === 'user') { %>
+              <li class="nav-item"><a class="nav-link" href="/orders">My Orders</a></li>
+            <% } %>
             <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
           <% } else { %>
             <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
@@ -112,24 +147,23 @@
   </nav>
 
   <main>
-  <br>
 
   <!-- Carousel -->
   <%- include('partials/carousel') %>
 
   <!-- Welcome -->
   <div class="welcome-card">
-    <h2>Welcome to FluffyFriend! 🐾</h2>
-    <p>Your one-stop pet shop for all furry friends.</p>
-
     <% if (user) { %>
+      <h2>Welcome back <%= user.username %> to FluffyFriend! <span class="logo-paw">🐾</span></h2>
+      <p>Your one-stop pet shop for all furry friends.</p>
       <a href="/UserProducts" class="btn btn-pink text-white px-4">View All Products</a>
     <% } else { %>
+      <h2>Welcome to FluffyFriend! <span class="logo-paw">🐾</span></h2>
+      <p>Your one-stop pet shop for all furry friends.</p>
       <a href="/login" class="btn btn-pink text-white me-2 px-4">Login</a>
       <a href="/register" class="btn btn-outline-pink px-4" style="border:1px solid #ff6fa3; color:#ff6fa3;">Register</a>
     <% } %>
   </div>
-
   <!-- Popular Products -->
   <div class="container popular-products">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -140,7 +174,7 @@
     <div class="row g-4">
     <div class="col-md-4">
       <div class="product-card">
-        <img src="https://cdn.pixabay.com/photo/2016/02/19/11/53/dog-1209621_960_720.jpg" class="product-img" alt="Dog Food">
+        <img src="/images/products/biooig.jpg" class="product-img" alt="Dog Food">
         <h5>Premium Dog Food</h5>
         <p class="text-muted small mb-0">Healthy and tasty meals for your pet.</p>
 
@@ -154,7 +188,7 @@
 
     <div class="col-md-4">
       <div class="product-card">
-        <img src="https://cdn.pixabay.com/photo/2017/01/06/19/15/cat-1954824_960_720.jpg" class="product-img" alt="Cat Toy">
+        <img src="/images/toys.jpg" class="product-img" alt="Cat Toy">
         <h5>Interactive Cat Toy</h5>
         <p class="text-muted small mb-0">Keeps your cat active and happy.</p>
 
@@ -168,7 +202,7 @@
 
     <div class="col-md-4">
       <div class="product-card">
-        <img src="https://cdn.pixabay.com/photo/2016/03/27/22/16/hamster-1283092_960_720.jpg" class="product-img" alt="Pet Accessories">
+        <img src="/images/grooming.jpg" class="product-img" alt="Pet Accessories">
         <h5>Pet Accessories</h5>
         <p class="text-muted small mb-0">Comfortable cages and play tools.</p>
 
@@ -181,15 +215,23 @@
     </div>
   </div>
 
+  </div>
+  </main>
+
   <!-- Footer -->
-  <footer>
-    <div class="container d-flex justify-content-between align-items-center">
-      <small>© <%= new Date().getFullYear() %> FluffyFriend.</small>
-      <small>Made with ♥ in a pink theme.</small>
-    </div>
-  </footer>
+  <%- include('partials/footer') %>
+
+  <!-- Floating Contact button -->
+  <a class="fab-contact" href="/contact" aria-label="Contact Us">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 10c0 6-9 11-9 11s-9-5-9-11a9 9 0 1 1 18 0Z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>
+    Contact Us
+  </a>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

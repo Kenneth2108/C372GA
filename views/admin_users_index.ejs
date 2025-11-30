@@ -252,7 +252,19 @@
     <div class="table-shell">
       <div class="table-toolbar">
         <h3 class="mb-0">Directory</h3>
-        <div class="ms-auto d-flex gap-2 flex-wrap">
+        <form method="get" action="/admin/users" class="ms-auto d-flex gap-2 flex-wrap">
+          <input
+            type="text"
+            class="form-control"
+            name="q"
+            placeholder="Search username, email, contact..."
+            value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>"
+            style="min-width: 240px;"
+          >
+          <button class="btn btn-outline-secondary" type="submit">Search</button>
+          <a href="/admin/users" class="btn btn-outline-secondary">Clear</a>
+        </form>
+        <div class="d-flex gap-2 flex-wrap mt-2 ms-auto">
           <a href="/admin" class="btn btn-outline-secondary">Back</a>
           <a href="/admin/users/new" class="btn btn-pink text-white">Add User</a>
         </div>
@@ -267,7 +279,7 @@
               <th>Address</th>
               <th>Contact</th>
               <th>Role</th>
-              <th style="width:170px" class="text-end">Actions</th>
+              <th style="width:210px" class="text-end">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -279,7 +291,27 @@
                   <td><%= u.email %></td>
                   <td><%= u.address %></td>
                   <td><%= u.contact %></td>
-                  <td><span class="badge-role"><%= u.role %></span></td>
+                  <td>
+                    <% if (u.role === 'admin') { %>
+                      <div>
+                        <span class="badge-role">ADMIN</span>
+                        <div class="text-muted small">Admin role cannot be changed</div>
+                      </div>
+                    <% } else if (user && String(user.id) === String(u.id)) { %>
+                      <div>
+                        <span class="badge-role"><%= u.role %></span>
+                        <div class="text-muted small">Own role cannot be changed</div>
+                      </div>
+                    <% } else { %>
+                      <form action="/admin/users/<%= u.id %>/role" method="post" class="d-flex align-items-center gap-2 flex-wrap">
+                        <select name="role" class="form-select form-select-sm" style="min-width: 110px;">
+                          <option value="user"  <%= u.role==='user' ? 'selected' : '' %>>user</option>
+                          <option value="admin" <%= u.role==='admin'? 'selected' : '' %>>admin</option>
+                        </select>
+                        <button class="btn btn-sm btn-pink text-white">Update</button>
+                      </form>
+                    <% } %>
+                  </td>
                   <td class="text-end">
                     <a href="/admin/users/<%= u.id %>/edit" class="btn btn-sm btn-outline-secondary me-2">Edit</a>
                     <form action="/admin/users/<%= u.id %>/delete" method="post" class="d-inline" onsubmit="return confirm('Delete this user?');">

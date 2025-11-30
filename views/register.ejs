@@ -59,7 +59,10 @@
             </div>
             <div class="mb-3">
               <label class="form-label">Password</label>
-              <input type="password" name="password" class="form-control" required>
+              <input type="password" name="password" class="form-control"
+                     pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}" minlength="6"
+                     title="At least 6 characters with uppercase, lowercase, and a number" required>
+              <small class="text-muted">Use at least 6 characters with uppercase, lowercase, and a number.</small>
             </div>
             <div class="mb-3">
               <label class="form-label">Address</label>
@@ -121,12 +124,7 @@
     </div>
   </main>
 
-  <footer>
-    <div class="container d-flex justify-content-between align-items-center">
-      <small>© <%= new Date().getFullYear() %> FluffyFriend.</small>
-      <small>Made with ♥ in a pink theme.</small>
-    </div>
-  </footer>
+  <%- include('partials/footer') %>
 
   <script>
     // basic toggle show/hide (no advanced JS)

@@ -1,3 +1,4 @@
+//Kenneth start
 const path = require('path');
 const express = require('express');
 const session = require('express-session');
@@ -46,9 +47,17 @@ const checkAdmin = (req, res, next) => {
   return res.redirect('/');
 };
 
+const checkUser = (req, res, next) => {
+  if (req.session.user && req.session.user.role === 'user') return next();
+  req.flash('error', 'User access required');
+  return res.redirect('/login');
+};
+
 module.exports = {
   registerMiddleware,
   checkAuthenticated,
   checkAdmin,
+  checkUser,
   upload
 };
+//Kenneth End
