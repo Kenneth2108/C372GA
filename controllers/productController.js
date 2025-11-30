@@ -153,7 +153,7 @@ exports.showStore = function (req, res) {
       });
     }
 
-    res.render('product', {
+    res.render('UserProducts', {
       products: filtered,
       query: query,
       selectedCategory: category, 

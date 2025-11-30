@@ -99,7 +99,7 @@
       <div class="collapse navbar-collapse" id="ffNav">
         <ul class="navbar-nav ms-auto">
           <% if (user) { %>
-            <li class="nav-item"><a class="nav-link" href="/products">View All Products</a></li>
+            <li class="nav-item"><a class="nav-link" href="/UserProducts">View All Products</a></li>
             <li class="nav-item"><a class="nav-link" href="/cart">Go To Cart</a></li>
             <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
           <% } else { %>
@@ -123,7 +123,7 @@
     <p>Your one-stop pet shop for all furry friends.</p>
 
     <% if (user) { %>
-      <a href="/products" class="btn btn-pink text-white px-4">View All Products</a>
+      <a href="/UserProducts" class="btn btn-pink text-white px-4">View All Products</a>
     <% } else { %>
       <a href="/login" class="btn btn-pink text-white me-2 px-4">Login</a>
       <a href="/register" class="btn btn-outline-pink px-4" style="border:1px solid #ff6fa3; color:#ff6fa3;">Register</a>
