@@ -35,7 +35,10 @@ exports.showProductDetails = function (req, res) {
       return res.redirect('/products');
     }
 
-    res.render('viewproduct', {
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
+    const viewName = isAdmin ? 'viewProduct' : 'viewProductGuest';
+
+    res.render(viewName, {
       product: product,
       success: req.flash('success'),
       error: req.flash('error')
@@ -153,7 +156,7 @@ exports.showStore = function (req, res) {
       });
     }
 
-    res.render('product', {
+    res.render('UserProducts', {
       products: filtered,
       query: query,
       selectedCategory: category, 
@@ -164,3 +167,4 @@ exports.showStore = function (req, res) {
   });
 };
 //Isaac end
+
