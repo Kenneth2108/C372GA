@@ -170,7 +170,7 @@
 
     <!-- Search bar -->
     <div class="search-bar-wrapper">
-      <form class="d-flex w-100" method="GET" action="/products">
+      <form class="d-flex w-100" method="GET" action="/UserProducts">
         <input
           type="text"
           name="q"
@@ -184,25 +184,48 @@
 
     <!-- Filter pills -->
     <div class="filter-bar">
+      <!-- All -->
       <button type="button"
               class="filter-pill <%= !selCategory ? 'active' : '' %>"
-              onclick="location.href='/products'">All</button>
+              onclick="location.href='/UserProducts'">All</button>
 
+      <!-- Food -->
       <button type="button"
               class="filter-pill <%= selCategory === 'Food' ? 'active' : '' %>"
-              onclick="location.href='/products?category=Food'">Food</button>
+              onclick="location.href='/UserProducts?category=Food'">Food</button>
 
+      <!-- Toys -->
       <button type="button"
               class="filter-pill <%= selCategory === 'Toys' ? 'active' : '' %>"
-              onclick="location.href='/products?category=Toys'">Toys</button>
+              onclick="location.href='/UserProducts?category=Toys'">Toys</button>
 
+      <!-- Grooming -->
       <button type="button"
               class="filter-pill <%= selCategory === 'Grooming' ? 'active' : '' %>"
-              onclick="location.href='/products?category=Grooming'">Grooming</button>
+              onclick="location.href='/UserProducts?category=Grooming'">Grooming</button>
 
+      <!-- Healthcare -->
       <button type="button"
               class="filter-pill <%= selCategory === 'Healthcare' ? 'active' : '' %>"
-              onclick="location.href='/products?category=Healthcare'">Healthcare</button>
+              onclick="location.href='/UserProducts?category=Healthcare'">Healthcare</button>
+    </div>
+
+    <div style="max-width:900px; margin:0 auto 20px;">
+      <button
+        onclick="window.history.back()"
+        style="
+          background:#ff6fa3;
+          border:none;
+          color:white;
+          padding:10px 22px;
+          border-radius:8px;
+          font-weight:600;
+          cursor:pointer;
+          box-shadow:0 3px 8px rgba(0,0,0,0.15);
+        "
+      >
+        ← Back
+      </button>
     </div>
 
     <!-- Product cards -->
