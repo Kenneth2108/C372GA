@@ -1,65 +1,26 @@
 //(Kenneth Start) 
 const express = require('express');
-const path = require('path');
-const session = require('express-session');
-const flash = require('connect-flash');
-const speakeasy = require('speakeasy');
-const QRCode = require('qrcode');
 const userCtrl = require('./controllers/userController');
 //(Isaac Start )
 const productCtrl = require('./controllers/productController');
-const multer = require('multer');
+const guestProductCtrl = require('./controllers/guestProductController');
 const contactCtrl = require('./controllers/contactController');
 //(Isaac End )
 const connection = require('./db');
 const app = express();
+const {
+  registerMiddleware,
+  checkAuthenticated,
+  checkAdmin,
+  upload
+} = require('./middleware');
 //(Kenneth End)
 //(Thrish Start)
 const CartItemsController = require('./controllers/CartItemController');
 //(Thrish End)
 
-//(Kenneth Start) 
-/* ---------- View + forms + static ---------- */
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-app.use(express.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, 'public')));
-
-//(Isaac Start )
-/* ---------- Multer for product images ---------- */
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, 'public', 'images', 'products'));
-  },
-  filename: function (req, file, cb) {
-    const uniqueName = Date.now() + '-' + file.originalname;
-    cb(null, uniqueName);
-  }
-});
-
-const upload = multer({ storage: storage });
-//(Isaac End )
-
-/* ---------- Session + Flash ---------- */
-app.use(session({
-  secret: 'secret',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 } // 1 week
-}));
-app.use(flash());
-
-/* ---------- Auth helpers ---------- */
-const checkAuthenticated = (req, res, next) => {
-  if (req.session.user) return next();
-  req.flash('error', 'Please log in first.');
-  return res.redirect('/login');
-};
-const checkAdmin = (req, res, next) => {
-  if (req.session.user && req.session.user.role === 'admin') return next();
-  req.flash('error', 'Access denied');
-  return res.redirect('/');
-};
+// Register common middleware (views, static, session, flash)
+registerMiddleware(app);
 
 /* ---------- Core pages ---------- */
 // Home
@@ -112,6 +73,7 @@ app.post('/admin/users/:id/delete', checkAuthenticated, checkAdmin, userCtrl.del
 //(Isaac Start )
 /* ---------- Storefront: all products (public) ---------- */
 app.get('/UserProducts', productCtrl.showStore);
+app.get('/GuestProducts', guestProductCtrl.showGuestStore);
 //(Isaac End )
 
 //(Isaac Start )

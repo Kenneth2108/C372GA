@@ -126,7 +126,7 @@ exports.updateProduct = function (req, res) {
   });
 };
 
-exports.showStore = function (req, res) {
+function renderStoreView(req, res, viewName) {
   const query = req.query.q || '';
   const category = req.query.category || '';
 
@@ -156,15 +156,19 @@ exports.showStore = function (req, res) {
       });
     }
 
-    res.render('UserProducts', {
+    res.render(viewName, {
       products: filtered,
       query: query,
-      selectedCategory: category, 
+      selectedCategory: category,
       cartCount: req.session.cart ? req.session.cart.length : 0,
       success: req.flash('success'),
       error: req.flash('error')
     });
   });
+}
+
+exports.showStore = function (req, res) {
+  renderStoreView(req, res, 'UserProducts');
 };
 //Isaac end
 
