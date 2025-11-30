@@ -72,15 +72,11 @@
     .product-card:hover {
       transform: translateY(-5px);
     }
-    .product-img {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      border-radius: 10px;
-      margin-bottom: 15px;
-    }
+    /* Sticky helper button */
+    .helper-fab { position: fixed; right: 20px; bottom: 24px; z-index: 30; }
+    .helper-fab .btn { box-shadow: 0 10px 25px rgba(255,111,163,0.3); border-radius: 999px; }
+    .helper-fab .btn:hover { transform: translateY(-2px); }
 
-    footer { background: linear-gradient(90deg, #ff8db8, #ff6fa3); color: white; padding: 12px 0; text-align: center; margin-top: auto; }
   </style>
 </head>
 
@@ -181,15 +177,19 @@
     </div>
   </div>
 
+  </main>
+
+  <div class="helper-fab">
+    <a href="/contact" class="btn btn-pink text-white px-3 py-2 d-flex align-items-center gap-2">
+      <span aria-hidden="true">?</span> Need help choosing?
+    </a>
+  </div>
+
   <!-- Footer -->
-  <footer>
-    <div class="container d-flex justify-content-between align-items-center">
-      <small>© <%= new Date().getFullYear() %> FluffyFriend.</small>
-      <small>Made with ♥ in a pink theme.</small>
-    </div>
-  </footer>
+  <%- include('partials/footer') %>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

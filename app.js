@@ -9,6 +9,7 @@ const userCtrl = require('./controllers/userController');
 //(Isaac Start )
 const productCtrl = require('./controllers/productController');
 const multer = require('multer');
+const contactCtrl = require('./controllers/contactController');
 //(Isaac End )
 const connection = require('./db');
 const app = express();
@@ -63,6 +64,9 @@ const checkAdmin = (req, res, next) => {
 /* ---------- Core pages ---------- */
 // Home
 app.get('/', userCtrl.home);
+
+// Contact
+app.get('/contact', contactCtrl.showContact);
 
 /* ---------- Register ---------- */
 // GET register — show form + (optional) 2FA QR during registration

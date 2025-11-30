@@ -73,6 +73,13 @@
               </div>
 
               <!-- Use numeric pattern with 6 digits -->
+              <% if (error && error.length) { %>
+                <div class="alert alert-danger text-center" role="alert">
+                  <strong>Wrong code.</strong> Please try again with the latest 6 digits.
+                </div>
+              <% } %>
+
+              <!-- Use numeric pattern with 6 digits -->
               <form method="POST" action="/2fa/verify" class="input-group input-group-lg mb-4">
                 <input name="token"
                        class="form-control code-input"

@@ -372,10 +372,16 @@ module.exports.twofaSetupConfirm = function (req, res) {
 // 2FA verify form
 module.exports.twofaVerifyForm = function (req, res) {
   if (!req.session.pending2FA) return res.redirect('/login');
+
+  // Prevent cache and surface any previous errors on the verify screen
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
-  res.render('twofa_verify', { name: req.session.pending2FA.username || 'User' });
+
+  res.render('twofa_verify', {
+    name: req.session.pending2FA.username || 'User',
+    error: req.flash('error')
+  });
 };
 
 // 2FA verify submit
@@ -402,7 +408,7 @@ module.exports.twofaVerify = function (req, res) {
     });
 
     if (!ok) {
-      req.flash('error', 'Invalid or expired code. Try again.');
+      req.flash('error', 'Wrong code. Please try again.');
       return res.redirect('/2fa/verify');
     }
 
