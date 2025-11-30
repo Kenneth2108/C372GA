@@ -35,16 +35,14 @@ exports.showProductDetails = function (req, res) {
       return res.redirect('/products');
     }
 
-    const isAdmin = req.session.user && req.session.user.role === 'admin';
-    const viewName = isAdmin ? 'viewProduct' : 'viewProductGuest';
-
-    res.render(viewName, {
+    res.render('viewproduct', {
       product: product,
       success: req.flash('success'),
       error: req.flash('error')
     });
   });
 };
+
 
 // Admin: show "add product" form
 exports.newProductForm = function (req, res) {
@@ -126,7 +124,7 @@ exports.updateProduct = function (req, res) {
   });
 };
 
-function renderStoreView(req, res, viewName) {
+exports.showStore = function (req, res) {
   const query = req.query.q || '';
   const category = req.query.category || '';
 
@@ -156,19 +154,15 @@ function renderStoreView(req, res, viewName) {
       });
     }
 
-    res.render(viewName, {
+    res.render('UserProducts', {
       products: filtered,
       query: query,
-      selectedCategory: category,
+      selectedCategory: category, 
       cartCount: req.session.cart ? req.session.cart.length : 0,
       success: req.flash('success'),
       error: req.flash('error')
     });
   });
-}
-
-exports.showStore = function (req, res) {
-  renderStoreView(req, res, 'UserProducts');
 };
 //Isaac end
 

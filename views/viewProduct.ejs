@@ -14,12 +14,63 @@
       font-family: 'Segoe UI', sans-serif;
       background:#fff6fb;
     }
+
     main { flex: 1; }
-    .navbar { background:linear-gradient(90deg,#ff8db8,#ff6fa3); }
-    .navbar-brand { color:#fff; font-weight:700; }
-    .nav-link { color:#fff !important; font-weight:500; border-radius:8px; padding:8px 14px; }
-    .price { font-weight:700; color:#ff4c93; }
-    footer { background: linear-gradient(90deg, #ff8db8, #ff6fa3); color: white; padding: 12px 0; margin-top: auto; }
+
+    .navbar {
+      background:linear-gradient(90deg,#ff8db8,#ff6fa3);
+    }
+    .navbar-brand {
+      color:#fff;
+      font-weight:700;
+    }
+    .nav-link {
+      color:#fff !important;
+      font-weight:500;
+      border-radius:8px;
+      padding:8px 14px;
+    }
+
+    .price {
+      font-weight:700;
+      color:#ff4c93;
+    }
+
+    footer {
+      background: linear-gradient(90deg, #ff8db8, #ff6fa3);
+      color: white;
+      padding: 12px 0;
+      margin-top: auto;
+    }
+
+    .back-wrapper {
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .btn-back {
+      background: #ff6fa3;
+      border: none;
+      color: white;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(255, 111, 163, 0.3);
+      transition: all 0.25s ease;
+    }
+
+    .btn-back:hover {
+      background: #ff8db8;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(255, 111, 163, 0.4);
+    }
+
+    .btn-back:active {
+      transform: translateY(0);
+      box-shadow: 0 3px 8px rgba(255, 111, 163, 0.3);
+    }
   </style>
 </head>
 
@@ -29,8 +80,6 @@
     <div class="container d-flex justify-content-between">
       <a class="navbar-brand" href="/">🐾 FluffyFriend</a>
       <div>
-        <a class="nav-link d-inline" href="/admin">Admin</a>
-        <a class="nav-link d-inline" href="/products">View Store</a>
         <a class="nav-link d-inline" href="/logout">Logout</a>
       </div>
     </div>
@@ -38,16 +87,23 @@
 
   <main>
     <div class="container py-5">
-      <a href="/admin/products" class="btn btn-secondary mb-3">&larr; Back to Products</a>
+      <!-- Back button -->
+      <div class="back-wrapper">
+        <button class="btn-back" onclick="window.history.back()">
+          ← Back
+        </button>
+      </div>
 
       <div class="row">
         <div class="col-md-5">
           <% if (product.image) { %>
-            <img src="/images/products/<%= product.image %>"
-                 class="img-fluid rounded mb-3"
-                 alt="<%= product.productName %>">
+            <img
+              src="/images/products/<%= product.image %>"
+              class="img-fluid rounded mb-3"
+              alt="<%= product.productName %>">
           <% } else { %>
-            <div class="border rounded d-flex align-items-center justify-content-center mb-3" style="height:300px;background:#fff;">
+            <div class="border rounded d-flex align-items-center justify-content-center mb-3"
+                 style="height:300px;background:#fff;">
               <span class="text-muted">No image</span>
             </div>
           <% } %>
@@ -59,7 +115,7 @@
           <p class="price fs-4 mb-3">$<%= Number(product.price).toFixed(2) %></p>
           <p class="mb-2">Stock available: <strong><%= product.quantity %></strong></p>
 
-          <% 
+          <%
             const desc = (product.description && String(product.description).trim().length)
               ? product.description
               : 'No description available.';

@@ -3,7 +3,6 @@ const express = require('express');
 const userCtrl = require('./controllers/userController');
 //(Isaac Start )
 const productCtrl = require('./controllers/productController');
-const guestProductCtrl = require('./controllers/guestProductController');
 const contactCtrl = require('./controllers/contactController');
 //(Isaac End )
 const connection = require('./db');
@@ -73,7 +72,6 @@ app.post('/admin/users/:id/delete', checkAuthenticated, checkAdmin, userCtrl.del
 //(Isaac Start )
 /* ---------- Storefront: all products (public) ---------- */
 app.get('/UserProducts', productCtrl.showStore);
-app.get('/GuestProducts', guestProductCtrl.showGuestStore);
 //(Isaac End )
 
 //(Isaac Start )

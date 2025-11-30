@@ -1,3 +1,4 @@
+<!-- Isaac Start -->
 <!doctype html>
 <html>
 <head>
@@ -83,6 +84,7 @@
       background:#ffe0f0;
       color:#ff4c93;
       font-weight:500;
+      cursor:pointer;
     }
     .filter-pill.active {
       background:#ff6fa3;
@@ -103,6 +105,11 @@
       display:flex;
       flex-direction:column;
       justify-content:space-between;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .product-card:hover {
+      transform: translateY(-3px);
+      box-shadow:0 8px 20px rgba(0,0,0,.12);
     }
     .paw-icon {
       width:70px;
@@ -138,6 +145,37 @@
       margin-top:8px;
       text-align:center;
     }
+
+    .back-wrapper {
+      max-width:900px;
+      margin:0 auto 20px;
+    }
+    .btn-back {
+      background:#ff6fa3;
+      border:none;
+      color:white;
+      padding:10px 22px;
+      border-radius:8px;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow:0 3px 8px rgba(0,0,0,0.15);
+    }
+
+    .btn-add-cart {
+      background:#ff6fa3;
+      border:none;
+      color:white;
+      padding:8px 16px;
+      border-radius:999px;
+      font-size:0.85rem;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow:0 3px 8px rgba(0,0,0,0.18);
+      margin-top:8px;
+    }
+    .btn-add-cart:hover {
+      background:#ff8db8;
+    }
   </style>
 </head>
 <body>
@@ -153,7 +191,7 @@
   </nav>
 
   <main>
-    <% 
+    <%
       const selCategory = (typeof selectedCategory !== 'undefined' ? selectedCategory : '');
       const q = (typeof query !== 'undefined' ? query : '');
     %>
@@ -185,45 +223,49 @@
     <!-- Filter pills -->
     <div class="filter-bar">
       <!-- All -->
-      <button type="button"
-              class="filter-pill <%= !selCategory ? 'active' : '' %>"
-              onclick="location.href='/UserProducts'">All</button>
+      <button
+        type="button"
+        class="filter-pill <%= !selCategory ? 'active' : '' %>"
+        onclick="location.href='/UserProducts'">
+        All
+      </button>
 
       <!-- Food -->
-      <button type="button"
-              class="filter-pill <%= selCategory === 'Food' ? 'active' : '' %>"
-              onclick="location.href='/UserProducts?category=Food'">Food</button>
+      <button
+        type="button"
+        class="filter-pill <%= selCategory === 'Food' ? 'active' : '' %>"
+        onclick="location.href='/UserProducts?category=Food'">
+        Food
+      </button>
 
       <!-- Toys -->
-      <button type="button"
-              class="filter-pill <%= selCategory === 'Toys' ? 'active' : '' %>"
-              onclick="location.href='/UserProducts?category=Toys'">Toys</button>
+      <button
+        type="button"
+        class="filter-pill <%= selCategory === 'Toys' ? 'active' : '' %>"
+        onclick="location.href='/UserProducts?category=Toys'">
+        Toys
+      </button>
 
       <!-- Grooming -->
-      <button type="button"
-              class="filter-pill <%= selCategory === 'Grooming' ? 'active' : '' %>"
-              onclick="location.href='/UserProducts?category=Grooming'">Grooming</button>
+      <button
+        type="button"
+        class="filter-pill <%= selCategory === 'Grooming' ? 'active' : '' %>"
+        onclick="location.href='/UserProducts?category=Grooming'">
+        Grooming
+      </button>
 
       <!-- Healthcare -->
-      <button type="button"
-              class="filter-pill <%= selCategory === 'Healthcare' ? 'active' : '' %>"
-              onclick="location.href='/UserProducts?category=Healthcare'">Healthcare</button>
+      <button
+        type="button"
+        class="filter-pill <%= selCategory === 'Healthcare' ? 'active' : '' %>"
+        onclick="location.href='/UserProducts?category=Healthcare'">
+        Healthcare
+      </button>
     </div>
 
-    <div style="max-width:900px; margin:0 auto 20px;">
-      <button
-        onclick="window.history.back()"
-        style="
-          background:#ff6fa3;
-          border:none;
-          color:white;
-          padding:10px 22px;
-          border-radius:8px;
-          font-weight:600;
-          cursor:pointer;
-          box-shadow:0 3px 8px rgba(0,0,0,0.15);
-        "
-      >
+    <!-- Back button -->
+    <div class="back-wrapper">
+      <button class="btn-back" onclick="window.location.href='/'">
         ← Back
       </button>
     </div>
@@ -236,22 +278,23 @@
             <div class="col-12 col-sm-6 col-md-4 col-lg-3">
               <div class="product-card">
 
-                <!-- IMAGE from DB -->
-                <% if (p.image) { %>
-                  <div class="text-center">
-                    <img
-                      src="/images/products/<%= p.image %>"
-                      alt="<%= p.productName %>"
-                      class="img-fluid rounded-3 mb-2"
-                      style="max-height:160px; object-fit:cover;"
-                    >
-                  </div>
-                <% } else { %>
-                  <div class="paw-icon">🐾</div>
-                <% } %>
+                <!-- CLICKABLE image + name to viewproduct -->
+                <a href="/viewproduct/<%= p.id %>" style="text-decoration:none; color:inherit;">
+                  <% if (p.image) { %>
+                    <div class="text-center">
+                      <img
+                        src="/images/products/<%= p.image %>"
+                        alt="<%= p.productName %>"
+                        class="img-fluid rounded-3 mb-2"
+                        style="max-height:160px; object-fit:cover;"
+                      >
+                    </div>
+                  <% } else { %>
+                    <div class="paw-icon">🐾</div>
+                  <% } %>
 
-                <!-- NAME -->
-                <div class="product-name"><%= p.productName %></div>
+                  <div class="product-name"><%= p.productName %></div>
+                </a>
 
                 <!-- DESC -->
                 <div class="product-desc">
@@ -262,6 +305,14 @@
                 <div class="price-row">
                   <span class="price">$<%= Number(p.price).toFixed(2) %></span>
                 </div>
+
+                <!-- ADD TO CART -->
+                <form action="/add-to-cart/<%= p.id %>" method="POST" class="text-center">
+                  <input type="hidden" name="quantity" value="1">
+                  <button type="submit" class="btn-add-cart">
+                    Add to Cart
+                  </button>
+                </form>
 
               </div>
             </div>
@@ -279,3 +330,4 @@
 
 </body>
 </html>
+<!-- Isaac End -->
