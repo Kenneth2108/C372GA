@@ -110,7 +110,51 @@ const CartItemsController = {
             }
             res.redirect('/cart');
         });
+    },
+
+    // Isaac start
+    // Add to cart from UserProducts page but stay on same page
+    addFromUserProducts(req, res) {
+        const userId = (req.session.user && (req.session.user.userId || req.session.user.id));
+        if (!userId) {
+            req.flash('error', 'Please log in to add items');
+            return res.redirect('/login');
+        }
+
+        const productId = parseInt(req.params.id, 10);
+        if (isNaN(productId)) {
+            req.flash('error', 'Invalid product ID');
+            return res.redirect('/UserProducts');
+        }
+
+        const qty = parseInt(req.body.quantity, 10) || 1;
+
+        // Fetch product price
+        const sql = "SELECT price FROM products WHERE id = ?";
+        db.query(sql, [productId], (err, rows) => {
+            if (err || rows.length === 0) {
+                req.flash('error', 'Product not found');
+                return res.redirect('/UserProducts');
+            }
+
+            const price = rows[0].price;
+
+            CartItems.add(userId, productId, qty, price, (err2) => {
+                if (err2) {
+                    console.error("Add to cart error:", err2);
+                    req.flash('error', 'Could not add item to cart');
+                    return res.redirect('/UserProducts');
+                }
+
+                req.flash('success', 'Item added to cart!');
+                const back = req.get('referer') || '/UserProducts';
+                return res.redirect(back);
+            });
+        });
     }
+    // Isaac end
 };
+
+
 
 module.exports = CartItemsController;

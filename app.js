@@ -92,9 +92,7 @@ app.get('/admin/orders', checkAuthenticated, checkAdmin, orderCtrl.listAllOrders
 //(Isaac Start )
 /* ---------- Storefront: all products (public) ---------- */
 app.get('/UserProducts', productCtrl.showStore);
-//(Isaac End )
 
-//(Isaac Start )
 /* ---------- Admin: Products CRU ---------- */
 app.get('/admin/products', checkAuthenticated, checkAdmin, productCtrl.getAllProducts); // render admin/products.ejs
 app.get('/viewproduct/:id', productCtrl.showProductDetails); // View single product (front-end)
@@ -102,6 +100,9 @@ app.get('/admin/products/new', checkAuthenticated, checkAdmin, productCtrl.newPr
 app.post('/admin/products', checkAuthenticated, checkAdmin, upload.single('image'), productCtrl.addProduct);
 app.get('/admin/products/:id/edit', checkAuthenticated, checkAdmin, productCtrl.getProductById); // render admin/product-edit.ejs
 app.post('/admin/products/:id/edit', checkAuthenticated, checkAdmin, upload.single('image'), productCtrl.updateProduct);
+
+// Add to cart from UserProducts without going to /cart
+app.post('/UserProducts/add/:id',checkAuthenticated,CartItemsController.addFromUserProducts);
 //(Isaac End )
 
 

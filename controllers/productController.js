@@ -155,6 +155,7 @@ exports.showStore = function (req, res) {
     }
 
     res.render('UserProducts', {
+      user: req.session.user,
       products: filtered,
       query: query,
       selectedCategory: category, 

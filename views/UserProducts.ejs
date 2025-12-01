@@ -7,6 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
+    /* Layout + base */
     html, body {
       height: 100%;
       margin: 0;
@@ -15,8 +16,11 @@
       font-family: 'Segoe UI', sans-serif;
       background: radial-gradient(circle at top, #ffe4f4 0, #ffd6ef 25%, #ffedf7 60%, #ffeef8 100%);
     }
-    main { flex: 1; }
+    main {
+      flex: 1;
+    }
 
+    /* Navbar */
     .navbar-fluffy {
       background: linear-gradient(90deg,#ff8db8,#ff6fa3);
       padding: 10px 0;
@@ -38,12 +42,26 @@
       justify-content:center;
       font-size:20px;
     }
+    .nav-menu {
+      color: #fff !important;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 8px;
+      transition: 0.25s ease;
+    }
+    .nav-menu:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff !important;
+      text-decoration: none;
+    }
 
+    /* Flash messages */
     .flash-wrapper {
       max-width:900px;
       margin:16px auto 0;
     }
 
+    /* Search bar */
     .search-bar-wrapper {
       max-width:900px;
       margin:8px auto 10px;
@@ -58,6 +76,11 @@
       padding:10px 18px;
       font-size:0.95rem;
       box-shadow:0 3px 8px rgba(0,0,0,.08);
+      background:#fff;
+    }
+    .search-input:focus {
+      outline:none;
+      box-shadow:0 0 0 2px rgba(255,111,163,0.3);
     }
     .search-button {
       border:none;
@@ -67,8 +90,13 @@
       color:#fff;
       font-weight:600;
       box-shadow:0 3px 8px rgba(0,0,0,.15);
+      transition:0.2s ease;
+    }
+    .search-button:hover {
+      background:#ff8db8;
     }
 
+    /* Category filter pills */
     .filter-bar {
       max-width:900px;
       margin:6px auto 24px;
@@ -85,12 +113,17 @@
       color:#ff4c93;
       font-weight:500;
       cursor:pointer;
+      transition:0.2s ease;
+    }
+    .filter-pill:hover {
+      background:#ffd1eb;
     }
     .filter-pill.active {
       background:#ff6fa3;
       color:#fff;
     }
 
+    /* Product grid + cards */
     .product-grid {
       max-width:1050px;
       margin:0 auto 40px;
@@ -136,16 +169,17 @@
       min-height:32px;
       text-align:center;
     }
+    .price-row {
+      margin-top:8px;
+      text-align:center;
+    }
     .price {
       font-weight:700;
       color:#ff4c93;
       font-size:0.95rem;
     }
-    .price-row {
-      margin-top:8px;
-      text-align:center;
-    }
 
+    /* Back button */
     .back-wrapper {
       max-width:900px;
       margin:0 auto 20px;
@@ -159,22 +193,60 @@
       font-weight:600;
       cursor:pointer;
       box-shadow:0 3px 8px rgba(0,0,0,0.15);
+      transition:0.2s ease;
+    }
+    .btn-back:hover {
+      background:#ff8db8;
     }
 
-    .btn-add-cart {
-      background:#ff6fa3;
+    /* Quantity input */
+    .qty-input {
+      width:70px;
+      padding:6px;
+      border-radius:10px;
+      border:2px solid #ffaad1;
+      font-size:0.9rem;
+      text-align:center;
+      font-weight:600;
+      background:#fff;
+      transition:0.25s ease;
+    }
+    .qty-input:focus {
+      outline:none;
+      border-color:#ff6fa3;
+      box-shadow:0 0 6px rgba(255,111,163,0.4);
+    }
+
+    /* Shop buttons row */
+    .btn-row {
+      display:flex;
+      justify-content:center;
+      gap:8px;
+      margin-top:8px;
+    }
+    .btn-shop {
       border:none;
-      color:white;
-      padding:8px 16px;
       border-radius:999px;
+      padding:8px 16px;
       font-size:0.85rem;
       font-weight:600;
       cursor:pointer;
       box-shadow:0 3px 8px rgba(0,0,0,0.18);
-      margin-top:8px;
+      transition:0.2s ease;
+      color:#fff;
+      white-space:nowrap;
+    }
+    .btn-add-cart {
+      background:#ff6fa3;
     }
     .btn-add-cart:hover {
       background:#ff8db8;
+    }
+    .btn-buy-now {
+      background:#ff4c93;
+    }
+    .btn-buy-now:hover {
+      background:#ff6fa3;
     }
   </style>
 </head>
@@ -183,10 +255,31 @@
   <!-- Navbar -->
   <nav class="navbar navbar-fluffy">
     <div class="container d-flex justify-content-between align-items-center">
+      <!-- Logo -->
       <a class="navbar-brand" href="/">
         <div class="brand-icon">🐾</div>
         <span>FluffyFriend</span>
       </a>
+
+      <!-- Right-side buttons -->
+      <div class="d-flex align-items-center gap-3">
+        <ul class="navbar-nav ms-auto d-flex flex-row align-items-center">
+          <% if (user) { %>
+            <li class="nav-item mx-2">
+              <a class="nav-link nav-menu d-flex align-items-center" href="/cart">
+                🛒 <span style="margin-left:6px;">Go To Cart</span>
+              </a>
+            </li>
+          <% } else { %>
+            <li class="nav-item mx-2">
+              <a class="nav-link nav-menu" href="/login">Login</a>
+            </li>
+            <li class="nav-item mx-2">
+              <a class="nav-link nav-menu" href="/register">Register</a>
+            </li>
+          <% } %>
+        </ul>
+      </div>
     </div>
   </nav>
 
@@ -277,7 +370,6 @@
           <% products.forEach(function (p) { %>
             <div class="col-12 col-sm-6 col-md-4 col-lg-3">
               <div class="product-card">
-
                 <!-- CLICKABLE image + name to viewproduct -->
                 <a href="/viewproduct/<%= p.id %>" style="text-decoration:none; color:inherit;">
                   <% if (p.image) { %>
@@ -301,19 +393,43 @@
                   <%= p.description ? p.description : (p.category || '') %>
                 </div>
 
-                <!-- PRICE -->
+                <!-- PRICE + Quantity -->
                 <div class="price-row">
                   <span class="price">$<%= Number(p.price).toFixed(2) %></span>
+                  <div class="text-muted small mt-1">
+                    In stock: <strong><%= p.quantity %></strong>
+                  </div>
                 </div>
 
-                <!-- ADD TO CART -->
-                <form action="/add-to-cart/<%= p.id %>" method="POST" class="text-center">
+                <!-- QUANTITY SELECTOR + ADD TO CART -->
+                <div class="text-center mt-2">
+                  <form
+                    action="/UserProducts/add/<%= p.id %>"
+                    method="POST"
+                    class="d-flex justify-content-center align-items-center gap-2"
+                  >
+                    <input
+                      type="number"
+                      name="quantity"
+                      min="1"
+                      max="<%= p.quantity %>"
+                      value="1"
+                      class="qty-input"
+                    />
+
+                    <button type="submit" class="btn-shop btn-add-cart">
+                      Add to Cart
+                    </button>
+                  </form>
+                </div>
+
+                <!-- BUY NOW (default quantity 1) -->
+                <form action="/add-to-cart/<%= p.id %>" method="POST" class="text-center mt-2">
                   <input type="hidden" name="quantity" value="1">
-                  <button type="submit" class="btn-add-cart">
-                    Add to Cart
+                  <button type="submit" class="btn-shop btn-buy-now">
+                    Buy Now
                   </button>
                 </form>
-
               </div>
             </div>
           <% }); %>
@@ -327,7 +443,6 @@
   </main>
 
   <%- include('partials/footer') %>
-
 </body>
 </html>
 <!-- Isaac End -->
