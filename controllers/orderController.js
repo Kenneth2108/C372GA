@@ -1,5 +1,12 @@
 const Orders = require('../models/orderModel');
 
+const ORDER_STATUSES = [
+  'Pending Order',
+  'Preparing Order',
+  'Out for Delivery',
+  'Completed'
+];
+
 exports.listUserOrders = function (req, res) {
   const userSession = req.session && req.session.user;
   const userId = userSession && (userSession.userId || userSession.id);
@@ -18,6 +25,7 @@ exports.listUserOrders = function (req, res) {
 
     const normalized = (orders || []).map((order) => ({
       ...order,
+      status: order.status || 'Pending Order',
       createdAt: order.createdAt ? new Date(order.createdAt) : null,
       items: order.items || []
     }));
@@ -34,6 +42,63 @@ exports.listUserOrders = function (req, res) {
   });
 };
 
+exports.showUserInvoice = function (req, res) {
+  const userSession = req.session && req.session.user;
+  const userId = userSession && (userSession.userId || userSession.id);
+  const orderId = parseInt(req.params.id, 10);
+
+  if (!userId || isNaN(orderId)) {
+    req.flash('error', 'Invalid request.');
+    return res.redirect('/orders');
+  }
+
+  Orders.getById(orderId, function (err, order) {
+    if (err) {
+      console.error('User invoice fetch error:', err);
+      req.flash('error', 'Unable to load invoice.');
+      return res.redirect('/orders');
+    }
+
+    if (!order || order.user_id !== userId) {
+      req.flash('error', 'Order not found.');
+      return res.redirect('/orders');
+    }
+
+    const items = (order.items || []).map((item) => ({
+      productName: item.product_name,
+      product_id: item.product_id,
+      price: Number(item.price || 0),
+      quantity: Number(item.quantity || 0),
+      lineTotal: Number(item.line_total || 0)
+    }));
+
+    const subtotal = order.subtotal != null ? Number(order.subtotal) : items.reduce((sum, item) => sum + item.lineTotal, 0);
+    const taxRate = 0.09;
+    const taxAmount = order.taxAmount != null ? Number(order.taxAmount) : subtotal * taxRate;
+    const summary = {
+      subtotal,
+      taxRate,
+      taxAmount,
+      total: order.total != null ? Number(order.total) : subtotal + taxAmount
+    };
+
+    const invoiceMeta = {
+      number: order.invoice_number,
+      date: order.created_at ? new Date(order.created_at) : new Date()
+    };
+
+    return res.render('checkout_invoice', {
+      user: userSession,
+      items,
+      summary,
+      invoiceMeta,
+      adminView: false,
+      backLink: '/orders',
+      backLabel: 'Back to Orders'
+    });
+  });
+};
+
 exports.listAllOrders = function (req, res) {
   Orders.getAllWithItems(function (err, orders) {
     if (err) {
@@ -45,8 +110,116 @@ exports.listAllOrders = function (req, res) {
     return res.render('admin_orders', {
       user: req.session.user,
       orders: orders || [],
+      orderStatuses: ORDER_STATUSES,
       success: req.flash('success'),
       error: req.flash('error')
     });
+  });
+};
+
+exports.showAdminInvoice = function (req, res) {
+  const orderId = parseInt(req.params.id, 10);
+  if (isNaN(orderId)) {
+    req.flash('error', 'Invalid order ID.');
+    return res.redirect('/admin/orders');
+  }
+
+  Orders.getById(orderId, function (err, order) {
+    if (err) {
+      console.error('Admin invoice fetch error:', err);
+      req.flash('error', 'Unable to load invoice.');
+      return res.redirect('/admin/orders');
+    }
+
+    if (!order) {
+      req.flash('error', 'Order not found.');
+      return res.redirect('/admin/orders');
+    }
+
+    const items = (order.items || []).map((item) => ({
+      productName: item.product_name,
+      product_id: item.product_id,
+      price: Number(item.price || 0),
+      quantity: Number(item.quantity || 0),
+      lineTotal: Number(item.line_total || 0)
+    }));
+
+    const subtotal = order.subtotal != null ? Number(order.subtotal) : items.reduce((sum, item) => sum + item.lineTotal, 0);
+    const taxRate = 0.09;
+    const taxAmount = order.taxAmount != null ? Number(order.taxAmount) : subtotal * taxRate;
+    const summary = {
+      subtotal,
+      taxRate,
+      taxAmount,
+      total: order.total != null ? Number(order.total) : subtotal + taxAmount
+    };
+
+    const invoiceMeta = {
+      number: order.invoice_number,
+      date: order.created_at ? new Date(order.created_at) : new Date()
+    };
+
+    const invoiceUser = {
+      username: order.username || 'Customer',
+      email: order.email || ''
+    };
+
+    return res.render('checkout_invoice', {
+      user: invoiceUser,
+      items,
+      summary,
+      invoiceMeta,
+      adminView: true,
+      backLink: '/admin/orders',
+      backLabel: 'Back to Orders'
+    });
+  });
+};
+
+exports.editOrderStatusForm = function (req, res) {
+  const orderId = parseInt(req.params.id, 10);
+  if (isNaN(orderId)) {
+    req.flash('error', 'Invalid order ID.');
+    return res.redirect('/admin/orders');
+  }
+
+  Orders.getById(orderId, function (err, order) {
+    if (err) {
+      console.error('Admin edit order fetch error:', err);
+      req.flash('error', 'Unable to load order.');
+      return res.redirect('/admin/orders');
+    }
+    if (!order) {
+      req.flash('error', 'Order not found.');
+      return res.redirect('/admin/orders');
+    }
+
+    return res.render('admineditorder', {
+      order,
+      statuses: ORDER_STATUSES,
+      success: req.flash('success'),
+      error: req.flash('error')
+    });
+  });
+};
+
+exports.updateOrderStatus = function (req, res) {
+  const orderId = parseInt(req.params.id, 10);
+  const status = req.body.status;
+
+  if (isNaN(orderId) || !status || !ORDER_STATUSES.includes(status)) {
+    req.flash('error', 'Invalid status update.');
+    return res.redirect('/admin/orders');
+  }
+
+  Orders.updateStatus(orderId, status, function (err) {
+    if (err) {
+      console.error('Order status update error:', err);
+      req.flash('error', 'Unable to update status.');
+      return res.redirect('/admin/orders');
+    }
+
+    req.flash('success', 'Order status updated.');
+    return res.redirect('/admin/orders');
   });
 };

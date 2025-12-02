@@ -36,26 +36,108 @@
       flex: 1;
     }
     .admin-hero {
-      background:#fff;
-      border-radius:16px;
-      box-shadow:0 3px 12px rgba(0,0,0,.1);
-      padding:28px;
+      background: linear-gradient(135deg,#ffeef8,#ffd5ea);
+      border-radius:20px;
+      box-shadow:0 25px 70px rgba(255,111,163,0.25);
+      padding:32px;
       margin:28px auto;
-      max-width:1000px;
-      text-align:center;
+      max-width:1100px;
+      position:relative;
+      overflow:hidden;
+    }
+    .admin-hero::after {
+      content:'';
+      position:absolute;
+      top:-40px;
+      right:-40px;
+      width:160px;
+      height:160px;
+      background:rgba(255,255,255,0.3);
+      border-radius:50%;
+      filter:blur(0.5px);
+    }
+    .hero-avatar {
+      width:72px;
+      height:72px;
+      border-radius:24px;
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:2rem;
+      color:#ff6fa3;
+      box-shadow:0 10px 25px rgba(255,111,163,0.25);
+    }
+    .hero-stats {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+      gap:16px;
+      margin-top:24px;
+    }
+    .hero-stat {
+      background:rgba(255,255,255,0.65);
+      border-radius:16px;
+      padding:14px 16px;
+      backdrop-filter:blur(6px);
+      box-shadow:0 8px 20px rgba(255,111,163,0.15);
+    }
+    .hero-stat-label {
+      font-size:0.75rem;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+      color:#b98ca3;
+      margin-bottom:4px;
+    }
+    .hero-stat-value {
+      font-size:1.5rem;
+      font-weight:700;
+      color:#ff3e8a;
     }
     .card-soft {
       background:#fff;
-      border-radius:14px;
-      box-shadow:0 3px 10px rgba(0,0,0,.08);
+      border-radius:18px;
       border:0;
+      padding:24px;
       text-align:left;
-      transition: transform .2s;
-      cursor: pointer;
+      transition: transform .25s, box-shadow .25s, background .25s;
+      box-shadow:0 10px 24px rgba(0,0,0,0.06);
+      cursor:pointer;
+      position:relative;
+      overflow:hidden;
+    }
+    .card-soft::after {
+      content:'';
+      position:absolute;
+      inset:0;
+      background:linear-gradient(135deg,rgba(255,111,163,0.08),rgba(255,159,211,0.08));
+      opacity:0;
+      transition:opacity .25s;
     }
     .card-soft:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 5px 14px rgba(0,0,0,.15);
+      transform: translateY(-6px);
+      box-shadow:0 20px 35px rgba(255,111,163,0.25);
+    }
+    .card-soft:hover::after {
+      opacity:1;
+    }
+    .card-icon {
+      width:56px;
+      height:56px;
+      border-radius:16px;
+      background:rgba(255,111,163,0.12);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:1.65rem;
+      color:#ff6fa3;
+      margin-bottom:14px;
+      position:relative;
+      z-index:1;
+    }
+    .card-soft h5,
+    .card-soft p {
+      position:relative;
+      z-index:1;
     }
     .btn-pink {
       background:#ff6fa3;
@@ -75,15 +157,7 @@
 
 <body>
   <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg">
-    <div class="container d-flex justify-content-between">
-      <a class="navbar-brand" href="/">🐾 FluffyFriend</a>
-      <div>
-        <a class="nav-link d-inline" href="/admin">Admin</a>
-        <a class="nav-link d-inline" href="/logout">Logout</a>
-      </div>
-    </div>
-  </nav>
+  <%- include('partials/admin_navbar') %>
 
   <main>
     <div class="container mt-3">
@@ -95,9 +169,32 @@
       <% } %>
     </div>
 
-    <div class="admin-hero container">
-      <h3 class="mb-1 fw-bold">Admin Dashboard</h3>
-      <p class="text-muted mb-0">Welcome, <strong><%= user.username %></strong> (role: <%= user.role %>)</p>
+    <% const heroStats = stats || { users: 0, products: 0, orders: 0 }; %>
+
+    <div class="admin-hero container text-center text-md-start">
+      <div class="d-flex flex-column flex-md-row align-items-center gap-3 position-relative">
+        <div class="hero-avatar">&#128062;</div>
+        <div>
+          <p class="text-uppercase small mb-1 text-muted">FluffyFriend Admin</p>
+          <h2 class="fw-bold mb-1">Hello, <%= user.username %></h2>
+          <p class="text-muted mb-0">You're logged in as <strong><%= user.role %></strong>. Keep an eye on your store at a glance.</p>
+        </div>
+      </div>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-label">Total Users</div>
+          <div class="hero-stat-value"><%= heroStats.users || 0 %></div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-label">Products</div>
+          <div class="hero-stat-value"><%= heroStats.products || 0 %></div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-label">Orders</div>
+          <div class="hero-stat-value"><%= heroStats.orders || 0 %></div>
+        </div>
+      </div>
     </div>
 
     <div class="container mb-5">
@@ -105,7 +202,8 @@
         <!-- Users box. -->
         <div class="col-md-4">
           <a href="/admin/users" style="text-decoration:none; color:inherit;">
-            <div class="card card-soft p-3 h-100">
+            <div class="card card-soft h-100">
+              <div class="card-icon">👥</div>
               <h5 class="mb-2 fw-bold">Users</h5>
               <p class="text-muted small">Create, update, or remove users.</p>
             </div>
@@ -115,7 +213,8 @@
         <!-- Products box -->
         <div class="col-md-4">
           <a href="/admin/products" style="text-decoration:none; color:inherit;">
-            <div class="card card-soft p-3 h-100">
+            <div class="card card-soft h-100">
+              <div class="card-icon">🛍️</div>
               <h5 class="mb-2 fw-bold">Products</h5>
               <p class="text-muted small">Add and edit products for the store.</p>
             </div>
@@ -125,7 +224,8 @@
         <!-- Orders box -->
         <div class="col-md-4">
           <a href="/admin/orders" style="text-decoration:none; color:inherit;">
-            <div class="card card-soft p-3 h-100">
+            <div class="card card-soft h-100">
+              <div class="card-icon">🧾</div>
               <h5 class="mb-2 fw-bold">Orders</h5>
               <p class="text-muted small">Review customer orders and status.</p>
             </div>

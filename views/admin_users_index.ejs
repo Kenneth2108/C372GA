@@ -5,199 +5,270 @@
   <title>FluffyFriend — Users</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-  :root {
-    --pink-50:   lavenderblush;
-    --pink-200:  pink;
-    --pink-500:  hotpink;
-    --pink-600:  deeppink;
-    --violet-900: indigo;
-    --text-muted: slategray;
-  }
 
-  html,
-  body {
-    height: 100%;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    background: var(--pink-50);
-    font-family: 'Segoe UI', sans-serif;
-  }
+  <style>
+    :root {
+      --pink-50:   lavenderblush;
+      --pink-200:  pink;
+      --pink-500:  hotpink;
+      --pink-600:  deeppink;
+      --violet-900: indigo;
+      --text-muted: slategray;
+    }
 
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.85), transparent 55%),
-      radial-gradient(circle at 80% 0, lavenderblush, transparent 45%);
-    z-index: -1;
-  }
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--pink-50);
+      font-family: 'Segoe UI', sans-serif;
+    }
 
-  main {
-    flex: 1;
-    padding-bottom: 3rem;
-  }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.85), transparent 55%),
+        radial-gradient(circle at 80% 0, lavenderblush, transparent 45%);
+      z-index: -1;
+    }
 
-  .navbar { background: linear-gradient(90deg, #ff8db8, #ff6fa3); }
+    main {
+      flex: 1;
+      padding-bottom: 3rem;
+    }
 
-  .navbar-brand { color: white; font-weight: 700; }
+    .navbar { background: linear-gradient(90deg, #ff8db8, #ff6fa3); }
+    .navbar-brand { color: white; font-weight: 700; }
+    .nav-link {
+      color: white !important;
+      border-radius: 8px;
+      padding: 8px 14px;
+      transition: 0.3s;
+    }
+    .nav-link:hover { background: #ff8db8; }
 
-  .nav-link { color: white !important; border-radius: 8px; padding: 8px 14px; transition: 0.3s; }
+    .btn-pink {
+      background: var(--pink-500);
+      border: none;
+    }
+    .btn-pink:hover { background: lightpink; }
 
-  .nav-link:hover { background: #ff8db8; }
+    .btn-ghost {
+      background: white;
+      border: 1px solid var(--pink-200);
+      color: var(--pink-600);
+      border-radius: 14px;
+      font-weight: 600;
+    }
 
-  .btn-pink {
-    background: var(--pink-500);
-    border: none;
-  }
+    .users-hero {
+      background: linear-gradient(135deg, white, var(--pink-200));
+      border-radius: 32px;
+      box-shadow: 0 30px 65px rgba(255, 111, 163, 0.25);
+      padding: 32px;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
 
-  .btn-pink:hover {
-    background: lightpink;
-  }
+    .users-hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 95% 5%, rgba(255, 255, 255, 0.8), transparent 50%);
+      pointer-events: none;
+    }
 
-  .btn-ghost {
-    background: white;
-    border: 1px solid var(--pink-200);
-    color: var(--pink-600);
-    border-radius: 14px;
-    font-weight: 600;
-  }
+    .hero-tags {
+      display: flex;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
 
-  .users-hero {
-    background: linear-gradient(135deg, white, var(--pink-200));
-    border-radius: 32px;
-    box-shadow: 0 30px 65px rgba(255, 111, 163, 0.25);
-    padding: 32px;
-    margin-bottom: 2rem;
-    position: relative;
-    overflow: hidden;
-  }
+    .hero-tag {
+      background: rgba(255, 105, 180, 0.15);
+      color: var(--pink-600);
+      font-weight: 600;
+      border-radius: 999px;
+      padding: 0.35rem 0.95rem;
+      font-size: 0.85rem;
+    }
 
-  .users-hero::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 95% 5%, rgba(255, 255, 255, 0.8), transparent 50%);
-    pointer-events: none;
-  }
+    .hero-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
 
-  .hero-tags {
-    display: flex;
-    gap: 0.65rem;
-    flex-wrap: wrap;
-    margin-bottom: 1rem;
-  }
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
 
-  .hero-tag {
-    background: rgba(255, 105, 180, 0.15);
-    color: var(--pink-600);
-    font-weight: 600;
-    border-radius: 999px;
-    padding: 0.35rem 0.95rem;
-    font-size: 0.85rem;
-  }
+    .stat-card {
+      background: white;
+      border-radius: 20px;
+      padding: 18px 22px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+    }
 
-  .hero-actions {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    margin-top: 1.5rem;
-  }
+    .stat-card small {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
 
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-  }
+    .stat-card strong {
+      display: block;
+      font-size: 1.4rem;
+      margin-top: 0.35rem;
+      color: var(--violet-900);
+    }
 
-  .stat-card {
-    background: white;
-    border-radius: 20px;
-    padding: 18px 22px;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
-  }
+    /* Table shell: wider but not full screen */
+    .table-shell {
+      background: white;
+      border-radius: 26px;
+      padding: 1.5rem;
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.08);
+      max-width: 1400px;
+      margin: auto;
+    }
 
-  .stat-card small {
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: 0.72rem;
-    color: var(--text-muted);
-  }
+    .table-toolbar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
 
-  .stat-card strong {
-    display: block;
-    font-size: 1.4rem;
-    margin-top: 0.35rem;
-    color: var(--violet-900);
-  }
+    .table-toolbar h3 {
+      margin: 0;
+      font-weight: 700;
+    }
 
-  .table-shell {
-    background: white;
-    border-radius: 26px;
-    padding: 1.5rem;
-    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.08);
-  }
+    .users-table thead {
+      background: var(--pink-200);
+    }
 
-  .table-toolbar {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-  }
+    .users-table th {
+      border-bottom: none;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--violet-900);
+      font-weight: 700;
+      padding-top: 0.85rem;
+      padding-bottom: 0.85rem;
+    }
 
-  .table-toolbar h3 {
-    margin: 0;
-    font-weight: 700;
-  }
+    .users-table td {
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+      white-space: normal;
+      word-break: break-word;
+    }
 
-  .users-table thead {
-    background: var(--pink-200);
-  }
+    .users-table tbody tr:hover:not(.table-group-row) {
+      background: rgba(255, 192, 203, 0.08);
+    }
 
-  .users-table th {
-    border-bottom: none;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-  }
+    .badge-role {
+      background: rgba(0, 0, 0, 0.08);
+      color: dimgray;
+      border-radius: 999px;
+      padding: 0.2rem 0.75rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+    }
 
-  .users-table td {
-    border-top: 1px solid rgba(0, 0, 0, 0.05);
-  }
+    /* Make Email & Address columns wider and consistent */
+    .users-table th:nth-child(3),
+    .users-table td:nth-child(3) {
+      min-width: 200px; /* Email */
+    }
 
-  .badge-role {
-    background: rgba(0, 0, 0, 0.08);
-    color: dimgray;
-    border-radius: 999px;
-    padding: 0.2rem 0.75rem;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-  }
+    .users-table th:nth-child(4),
+    .users-table td:nth-child(4) {
+      min-width: 260px; /* Address */
+      max-width: 360px;
+    }
 
-  footer {
-    background: linear-gradient(90deg, lightpink, hotpink);
-    color: white;
-    padding: 12px 0;
-    margin-top: auto;
-  }
-</style>
+    /* Group header rows inside the table */
+    .table-group-row td {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.35rem 1.1rem;
+      border-radius: 999px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+
+    .section-master {
+      background: linear-gradient(135deg, #4b1f4f, #7a2f7f);
+      color: white;
+    }
+
+    .section-admin {
+      background: linear-gradient(135deg, #ff7fb4, #ff4f93);
+      color: white;
+    }
+
+    .section-user {
+      background: linear-gradient(135deg, #ede0ff, #d3b4ff);
+      color: #4a2c6c;
+    }
+
+    .section-divider {
+      height: 4px;
+      border-radius: 999px;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .divider-master {
+      background: linear-gradient(90deg, rgba(75,31,79,0.4), rgba(122,47,127,0.8));
+    }
+
+    .divider-admin {
+      background: linear-gradient(90deg, rgba(255,127,180,0.4), rgba(255,79,147,0.8));
+    }
+
+    .divider-user {
+      background: linear-gradient(90deg, rgba(237,224,255,0.6), rgba(211,180,255,0.9));
+    }
+
+    footer {
+      background: linear-gradient(90deg, lightpink, hotpink);
+      color: white;
+      padding: 12px 0;
+      margin-top: auto;
+    }
+  </style>
 </head>
 <body>
   <!-- Navbar. -->
-  <nav class="navbar">
-    <div class="container d-flex justify-content-between">
-      <a class="navbar-brand" href="/">🐾 FluffyFriend</a>
-      <div>
-        <a class="nav-link d-inline" href="/admin">Admin</a>
-        <a class="nav-link d-inline" href="/logout">Logout</a>
-      </div>
-    </div>
-  </nav>
+  <%- include('partials/admin_navbar') %>
 
   <main class="container my-4">
     <% if (success && success.length) { %>
@@ -207,9 +278,19 @@
       <div class="alert alert-danger"><%= error[0] %></div>
     <% } %>
 
-    <% var totalUsers = users ? users.length : 0; %>
-    <% var admins = users ? users.filter(function(u){ return u.role === 'admin'; }).length : 0; %>
-    <% var regulars = totalUsers - admins; %>
+    <% var userList   = Array.isArray(users) ? users : []; %>
+    <% var masterList = userList.filter(function(u){ return u.role === 'master'; }); %>
+    <% var adminList  = userList.filter(function(u){ return u.role === 'admin'; }); %>
+    <% var regularList= userList.filter(function(u){ return u.role !== 'admin' && u.role !== 'master'; }); %>
+
+    <% var totalUsers = userList.length; %>
+    <% var masters    = masterList.length; %>
+    <% var admins     = adminList.length; %>
+    <% var regulars   = regularList.length; %>
+    <% var today      = new Date(); %>
+    <% var currentRole = (user && user.role) || ''; %>
+    <% var isMaster    = currentRole === 'master'; %>
+    <% var canManageUserRoles = (currentRole === 'master' || currentRole === 'admin'); %>
 
     <section class="users-hero">
       <div class="hero-tags">
@@ -224,8 +305,6 @@
       </div>
     </section>
 
-    <% var today = new Date(); %>
-
     <div class="stats-row">
       <div class="stat-card">
         <small>Total members</small>
@@ -236,6 +315,11 @@
         <small>Admins</small>
         <strong><%= admins %></strong>
         <p class="text-muted mb-0">Users with elevated access.</p>
+      </div>
+      <div class="stat-card">
+        <small>Masters</small>
+        <strong><%= masters %></strong>
+        <p class="text-muted mb-0">Highest privileged accounts.</p>
       </div>
       <div class="stat-card">
         <small>Regular users</small>
@@ -252,6 +336,7 @@
     <div class="table-shell">
       <div class="table-toolbar">
         <h3 class="mb-0">Directory</h3>
+
         <form method="get" action="/admin/users" class="ms-auto d-flex gap-2 flex-wrap">
           <input
             type="text"
@@ -264,11 +349,13 @@
           <button class="btn btn-outline-secondary" type="submit">Search</button>
           <a href="/admin/users" class="btn btn-outline-secondary">Clear</a>
         </form>
+
         <div class="d-flex gap-2 flex-wrap mt-2 ms-auto">
           <a href="/admin" class="btn btn-outline-secondary">Back</a>
           <a href="/admin/users/new" class="btn btn-pink text-white">Add User</a>
         </div>
       </div>
+
       <div class="table-responsive">
         <table class="table users-table align-middle mb-0">
           <thead>
@@ -283,8 +370,22 @@
             </tr>
           </thead>
           <tbody>
-            <% if (users && users.length) { %>
-              <% users.forEach((u, index) => { %>
+
+            <!-- MASTER ACCOUNTS GROUP -->
+            <tr class="table-group-row">
+              <td colspan="7">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <span class="section-label section-master">👑 Master Accounts</span>
+                    <div class="section-divider divider-master"></div>
+                  </div>
+                  <span class="text-muted small"><%= masters %> total</span>
+                </div>
+              </td>
+            </tr>
+
+            <% if (masterList.length) { %>
+              <% masterList.forEach(function(u, index) { %>
                 <tr>
                   <td><%= index + 1 %></td>
                   <td class="fw-semibold"><%= u.username %></td>
@@ -292,39 +393,146 @@
                   <td><%= u.address %></td>
                   <td><%= u.contact %></td>
                   <td>
-                    <% if (u.role === 'admin') { %>
+                    <div>
+                      <span class="badge-role">MASTER</span>
+                      <div class="text-muted small">Highest privilege</div>
+                    </div>
+                  </td>
+                  <td class="text-end">
+                    <span class="text-muted small">Role locked</span>
+                  </td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" class="text-center text-muted py-3">No master accounts found.</td>
+              </tr>
+            <% } %>
+
+            <!-- ADMIN ACCOUNTS GROUP -->
+            <tr class="table-group-row">
+              <td colspan="7">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <span class="section-label section-admin">🛡️ Admin Accounts</span>
+                    <div class="section-divider divider-admin"></div>
+                  </div>
+                  <span class="text-muted small"><%= admins %> total</span>
+                </div>
+              </td>
+            </tr>
+
+            <% if (adminList.length) { %>
+              <% adminList.forEach(function(u, index) { %>
+                <tr>
+                  <td><%= index + 1 %></td>
+                  <td class="fw-semibold"><%= u.username %></td>
+                  <td><%= u.email %></td>
+                  <td><%= u.address %></td>
+                  <td><%= u.contact %></td>
+                  <td>
+                    <% if (user && user.role === 'master') { %>
+                      <form action="/admin/users/<%= u.id %>/role" method="post"
+                            class="d-flex align-items-center gap-2 flex-wrap">
+                        <select name="role" class="form-select form-select-sm" style="min-width: 120px;">
+                          <option value="user"   <%= u.role==='user'  ? 'selected' : '' %>>user</option>
+                          <option value="admin"  <%= u.role==='admin' ? 'selected' : '' %>>admin</option>
+                          <option value="master" <%= u.role==='master'? 'selected' : '' %>>master</option>
+                        </select>
+                        <button class="btn btn-sm btn-pink text-white">Update</button>
+                      </form>
+                    <% } else { %>
                       <div>
                         <span class="badge-role">ADMIN</span>
                         <div class="text-muted small">Admin role cannot be changed</div>
                       </div>
-                    <% } else if (user && String(user.id) === String(u.id)) { %>
+                    <% } %>
+                  </td>
+                  <td class="text-end">
+                    <% if (user && user.role === 'master') { %>
+                      <a href="/admin/users/<%= u.id %>/edit" class="btn btn-sm btn-outline-secondary me-2">Edit</a>
+                      <form action="/admin/users/<%= u.id %>/delete" method="post"
+                            class="d-inline" onsubmit="return confirm('Delete this user?');">
+                        <button class="btn btn-sm btn-outline-danger">Delete</button>
+                      </form>
+                    <% } else { %>
+                      <span class="text-muted small">Master admin required for actions.</span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" class="text-center text-muted py-3">No admin accounts found.</td>
+              </tr>
+            <% } %>
+
+            <!-- USER ACCOUNTS GROUP -->
+            <tr class="table-group-row">
+              <td colspan="7">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <span class="section-label section-user">🙂 User Accounts</span>
+                    <div class="section-divider divider-user"></div>
+                  </div>
+                  <span class="text-muted small"><%= regulars %> total</span>
+                </div>
+              </td>
+            </tr>
+
+            <% if (regularList.length) { %>
+              <% regularList.forEach(function(u, index) { %>
+                <tr>
+                  <td><%= index + 1 %></td>
+                  <td class="fw-semibold"><%= u.username %></td>
+                  <td><%= u.email %></td>
+                  <td><%= u.address %></td>
+                  <td><%= u.contact %></td>
+                  <td>
+                    <% if (user && String(user.id) === String(u.id)) { %>
                       <div>
                         <span class="badge-role"><%= u.role %></span>
                         <div class="text-muted small">Own role cannot be changed</div>
                       </div>
                     <% } else { %>
-                      <form action="/admin/users/<%= u.id %>/role" method="post" class="d-flex align-items-center gap-2 flex-wrap">
-                        <select name="role" class="form-select form-select-sm" style="min-width: 110px;">
-                          <option value="user"  <%= u.role==='user' ? 'selected' : '' %>>user</option>
-                          <option value="admin" <%= u.role==='admin'? 'selected' : '' %>>admin</option>
-                        </select>
-                        <button class="btn btn-sm btn-pink text-white">Update</button>
-                      </form>
+                      <% if (canManageUserRoles) { %>
+                        <form action="/admin/users/<%= u.id %>/role" method="post"
+                              class="d-flex align-items-center gap-2 flex-wrap">
+                          <select name="role" class="form-select form-select-sm" style="min-width: 120px;">
+                            <option value="user" <%= u.role==='user' ? 'selected' : '' %>>user</option>
+                            <% if (isMaster) { %>
+                              <option value="admin"  <%= u.role==='admin'? 'selected' : '' %>>admin</option>
+                              <option value="master" <%= u.role==='master'? 'selected' : '' %>>master</option>
+                            <% } else if (currentRole === 'admin') { %>
+                              <option value="admin" <%= u.role==='admin'? 'selected' : '' %>>admin</option>
+                            <% } else { %>
+                              <option value="admin" disabled>admin (restricted)</option>
+                            <% } %>
+                          </select>
+                          <% if (canManageUserRoles) { %>
+                            <button class="btn btn-sm btn-pink text-white">Update</button>
+                          <% } %>
+                        </form>
+                      <% } else { %>
+                        <div class="text-muted small">Contact an admin or master to change roles.</div>
+                      <% } %>
                     <% } %>
                   </td>
                   <td class="text-end">
                     <a href="/admin/users/<%= u.id %>/edit" class="btn btn-sm btn-outline-secondary me-2">Edit</a>
-                    <form action="/admin/users/<%= u.id %>/delete" method="post" class="d-inline" onsubmit="return confirm('Delete this user?');">
+                    <form action="/admin/users/<%= u.id %>/delete" method="post"
+                          class="d-inline" onsubmit="return confirm('Delete this user?');">
                       <button class="btn btn-sm btn-outline-danger">Delete</button>
                     </form>
                   </td>
                 </tr>
-              <% }) %>
+              <% }); %>
             <% } else { %>
               <tr>
-                <td colspan="7" class="text-center text-muted py-4">No users found.</td>
+                <td colspan="7" class="text-center text-muted py-3">No user accounts found.</td>
               </tr>
             <% } %>
+
           </tbody>
         </table>
       </div>
@@ -337,6 +545,7 @@
       <small>Made with ♥ in a pink theme.</small>
     </div>
   </footer>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

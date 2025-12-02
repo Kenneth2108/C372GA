@@ -20,41 +20,64 @@
       flex: 1;
     }
 
-    /* Navbar */
-    .navbar-fluffy {
-      background: linear-gradient(90deg,#ff8db8,#ff6fa3);
-      padding: 10px 0;
-    }
-    .navbar-brand {
-      font-weight: 700;
-      color:#fff !important;
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-    .brand-icon {
-      width:34px;
-      height:34px;
-      border-radius:50%;
-      background:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:20px;
-    }
-    .nav-menu {
-      color: #fff !important;
-      font-weight: 500;
-      padding: 6px 14px;
-      border-radius: 8px;
-      transition: 0.25s ease;
-    }
-    .nav-menu:hover {
-      background: rgba(255, 255, 255, 0.2);
-      color: #fff !important;
-      text-decoration: none;
-    }
-
+    /* Shared navbar (partials/user_navbar) */
+    .navbar {
+      background: linear-gradient(90deg, #ff8db8, #ff6fa3);
+    }
+    .navbar-brand {
+      color: #fff !important;
+      font-weight: 700;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .navbar .nav-link {
+      color: #fff !important;
+      font-weight: 500;
+      border-radius: 8px;
+      padding: 8px 14px;
+      transition: 0.3s ease;
+    }
+    .navbar .nav-link:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #fff !important;
+    }
+    .navbar .navbar-toggler {
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+    .navbar .navbar-toggler-icon {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255,255,255,.9)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+    }
+
+    /* Legacy navbar styles (guests/admin) */
+    .navbar-fluffy {
+      background: linear-gradient(90deg,#ff8db8,#ff6fa3);
+      padding: 10px 0;
+    }
+    .brand-icon {
+      width:34px;
+      height:34px;
+      border-radius:50%;
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:20px;
+    }
+    .nav-menu {
+      color: #fff !important;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 8px;
+      transition: 0.25s ease;
+    }
+    .nav-menu:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff !important;
+      text-decoration: none;
+    }
+
     /* Flash messages */
     .flash-wrapper {
       max-width:900px;
@@ -252,37 +275,41 @@
 </head>
 <body>
 
-  <!-- Navbar -->
-  <nav class="navbar navbar-fluffy">
-    <div class="container d-flex justify-content-between align-items-center">
-      <!-- Logo -->
-      <a class="navbar-brand" href="/">
-        <div class="brand-icon">🐾</div>
-        <span>FluffyFriend</span>
-      </a>
-
-      <!-- Right-side buttons -->
-      <div class="d-flex align-items-center gap-3">
-        <ul class="navbar-nav ms-auto d-flex flex-row align-items-center">
-          <% if (user) { %>
-            <li class="nav-item mx-2">
-              <a class="nav-link nav-menu d-flex align-items-center" href="/cart">
-                🛒 <span style="margin-left:6px;">Go To Cart</span>
-              </a>
-            </li>
-          <% } else { %>
-            <li class="nav-item mx-2">
-              <a class="nav-link nav-menu" href="/login">Login</a>
-            </li>
-            <li class="nav-item mx-2">
-              <a class="nav-link nav-menu" href="/register">Register</a>
-            </li>
-          <% } %>
-        </ul>
-      </div>
-    </div>
-  </nav>
-
+  <!-- Navbar -->
+  <% if (user && user.role === 'user') { %>
+    <%- include('partials/user_navbar') %>
+  <% } else { %>
+    <nav class="navbar navbar-fluffy">
+      <div class="container d-flex justify-content-between align-items-center">
+        <!-- Logo -->
+        <a class="navbar-brand" href="/">
+          <div class="brand-icon">dY?_</div>
+          <span>FluffyFriend</span>
+        </a>
+
+        <!-- Right-side buttons -->
+        <div class="d-flex align-items-center gap-3">
+          <ul class="navbar-nav ms-auto d-flex flex-row align-items-center">
+            <% if (user) { %>
+              <li class="nav-item mx-2">
+                <a class="nav-link nav-menu d-flex align-items-center" href="/cart">
+                  dY>' <span style="margin-left:6px;">Go To Cart</span>
+                </a>
+              </li>
+            <% } else { %>
+              <li class="nav-item mx-2">
+                <a class="nav-link nav-menu" href="/login">Login</a>
+              </li>
+              <li class="nav-item mx-2">
+                <a class="nav-link nav-menu" href="/register">Register</a>
+              </li>
+            <% } %>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  <% } %>
+
   <main>
     <%
       const selCategory = (typeof selectedCategory !== 'undefined' ? selectedCategory : '');

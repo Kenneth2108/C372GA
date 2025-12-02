@@ -37,6 +37,7 @@ const CartItemsController = require('./controllers/CartItemController');
 app.post('/checkout', checkAuthenticated, checkoutCtrl.generateInvoice);
 app.get('/invoice', checkAuthenticated, checkoutCtrl.showInvoice);
 app.get('/orders', checkAuthenticated, checkUser, orderCtrl.listUserOrders);
+app.get('/orders/:id/invoice', checkAuthenticated, checkUser, orderCtrl.showUserInvoice);
 
 /* ---------- Core pages ---------- */
 // Home
@@ -86,6 +87,9 @@ app.post('/admin/users/:id/edit', checkAuthenticated, checkAdmin, userCtrl.updat
 app.post('/admin/users/:id/role', checkAuthenticated, checkAdmin, userCtrl.updateUserRole);
 app.post('/admin/users/:id/delete', checkAuthenticated, checkAdmin, userCtrl.deleteUser);
 app.get('/admin/orders', checkAuthenticated, checkAdmin, orderCtrl.listAllOrders);
+app.get('/admin/orders/:id/invoice', checkAuthenticated, checkAdmin, orderCtrl.showAdminInvoice);
+app.get('/admin/orders/:id/edit', checkAuthenticated, checkAdmin, orderCtrl.editOrderStatusForm);
+app.post('/admin/orders/:id/edit', checkAuthenticated, checkAdmin, orderCtrl.updateOrderStatus);
 
 //(Kenneth End) 
 

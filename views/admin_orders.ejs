@@ -5,6 +5,7 @@
   <title>FluffyFriend — Orders</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
   <style>
     body {
       background: #fff6fb;
@@ -13,43 +14,107 @@
       display: flex;
       flex-direction: column;
     }
+
     main {
       flex: 1;
       padding-bottom: 2rem;
     }
+
     .navbar {
       background: linear-gradient(90deg, #ff8db8, #ff6fa3);
     }
+
     .navbar-brand {
       color: white;
       font-weight: 700;
     }
+
     .nav-link {
       color: white !important;
       border-radius: 8px;
       padding: 8px 14px;
     }
+
     .nav-link:hover {
       background: #ff8db8;
     }
+
     .orders-shell {
       background: #fff;
       border-radius: 26px;
       padding: 1.5rem;
       box-shadow: 0 30px 70px rgba(0, 0, 0, 0.08);
     }
+
     .filter-bar {
       background: #ffe3f0;
       border-radius: 16px;
       padding: 1rem;
       margin-bottom: 1.5rem;
     }
-    .order-header {
-      background: #ffe3f0;
-      border-radius: 16px;
-      padding: 12px 16px;
-      margin-bottom: 1rem;
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 1.5rem;
     }
+
+    .stat-card {
+      background: white;
+      border-radius: 16px;
+      padding: 18px 20px;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.06);
+    }
+
+    .stat-card small {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #b98ca3;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #ff6fa3;
+      margin-bottom: 0;
+    }
+
+    .stat-note {
+      font-size: 0.8rem;
+      color: #9c6d87;
+    }
+
+    /* === match orders.ejs card look === */
+    .order-card {
+      border-radius: 18px;
+      padding: 24px;
+      margin-bottom: 24px;
+      background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #ffe0ef, #fff6fb);
+      background-origin: border-box;
+      background-clip: padding-box, border-box;
+      box-shadow: 0 12px 30px rgba(255, 111, 163, 0.15);
+      border: 1px solid transparent;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .order-card:nth-of-type(even) {
+      background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #fce9ff, #fff);
+    }
+
+    .order-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 25px 55px rgba(255, 111, 163, 0.25);
+      background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #ff9fd3, #ffd4e8);
+    }
+
+    .order-header {
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+    }
+
     .badge-pill {
       border-radius: 999px;
       background: rgba(255,111,163,0.15);
@@ -58,126 +123,544 @@
       font-size: 0.8rem;
       font-weight: 600;
     }
+
+    .order-summary {
+      background: #fff5fa;
+      border-radius: 14px;
+      padding: 12px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .order-summary .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #a66384;
+      margin-bottom: 4px;
+    }
+
+    .order-totals {
+      display: flex;
+      gap: 16px;
+      align-items: flex-end;
+      margin-left: auto;
+    }
+
+    .order-totals .value {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .order-totals .total-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #ff6fa3;
+    }
+
+    .order-status-bar {
+      background: #fff8fb;
+      border-radius: 16px;
+      padding: 20px 16px 12px;
+      display: flex;
+      gap: 12px;
+      position: relative;
+      margin-bottom: 1rem;
+    }
+
+    .order-status-bar::before {
+      content: '';
+      position: absolute;
+      top: 42px;
+      left: 60px;
+      right: 60px;
+      height: 4px;
+      background: linear-gradient(90deg, rgba(255,173,206,0.6), rgba(255,239,247,0.9));
+      border-radius: 999px;
+      z-index: 0;
+    }
+
+    .status-step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #ffd4e5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      font-size: 1.2rem;
+      color: #a66384;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .status-icon::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%);
+      opacity: 0;
+      transition: opacity 0.2s;
+      animation: pulse 2.8s ease-in-out infinite;
+      animation-play-state: paused;
+    }
+
+    .status-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #a66384;
+    }
+
+    .status-subtext {
+      font-size: 0.65rem;
+      color: #b98ca3;
+    }
+
+    .status-step.active .status-icon {
+      border-color: transparent;
+      background: linear-gradient(135deg, #ff6fa3, #ff9fd3);
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(255,111,163,0.25);
+    }
+
+    .status-step.active .status-icon::after {
+      opacity: 1;
+      animation-play-state: running;
+    }
+
+    .status-step.active .status-label,
+    .status-step.active .status-subtext {
+      color: #ff6fa3;
+      font-weight: 600;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.5; }
+      50% { transform: scale(1.15); opacity: 0; }
+      100% { transform: scale(0.9); opacity: 0; }
+    }
+
+    .btn-outline-pink {
+      border: 1px solid #ff6fa3;
+      color: #ff6fa3;
+    }
+
+    .btn-outline-pink:hover {
+      background: #ff6fa3;
+      color: #fff;
+    }
+
+    /* layout + sidebar same as orders.ejs */
+    .order-layout {
+      display: flex;
+      gap: 24px;
+    }
+
+    .order-content {
+      flex: 1 1 auto;
+    }
+
+    .order-sidebar {
+      width: 280px;
+      position: sticky;
+      top: 90px;
+      align-self: flex-start;
+      background: linear-gradient(180deg, #fff9fd, #ffe7f2);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+      border: 1px solid rgba(255,255,255,0.6);
+    }
+
+    .order-sidebar h5 {
+      font-weight: 700;
+      color: #ff6fa3;
+    }
+
+    .sidebar-customer {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      text-transform: capitalize;
+    }
+
+    .sidebar-item {
+      margin-bottom: 16px;
+    }
+
+    .sidebar-label {
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      color: #a66384;
+      letter-spacing: 0.05em;
+    }
+
+    .sidebar-value {
+      font-size: 1.05rem;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .sidebar-divider {
+      height: 1px;
+      background: rgba(166,99,132,0.18);
+      margin: 1rem 0;
+    }
+
+    .sidebar-cta {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .order-sidebar .btn {
+      border-radius: 12px;
+    }
+
+    /* transparent rows like orders.ejs */
+    .table > :not(caption) > * > * {
+      background-color: transparent;
+    }
+
+    @media (max-width: 992px) {
+      .order-layout {
+        flex-direction: column;
+      }
+      .order-sidebar {
+        width: 100%;
+        position: relative;
+        top: auto;
+      }
+    }
   </style>
 </head>
+
 <body>
-  <nav class="navbar">
-    <div class="container d-flex justify-content-between">
-      <a class="navbar-brand" href="/">🐾 FluffyFriend</a>
-      <div>
-        <a class="nav-link d-inline" href="/admin">Admin</a>
-        <a class="nav-link d-inline" href="/admin/users">Users</a>
-        <a class="nav-link d-inline" href="/logout">Logout</a>
-      </div>
+  <%- include('partials/admin_navbar') %>
+
+<main class="container my-4">
+
+  <% if (success && success.length) { %>
+    <div class="alert alert-success"><%= success[0] %></div>
+  <% } %>
+
+  <% if (error && error.length) { %>
+    <div class="alert alert-danger"><%= error[0] %></div>
+  <% } %>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h2 class="fw-bold mb-0">Orders</h2>
+      <p class="text-muted mb-0">Review completed checkouts</p>
     </div>
-  </nav>
+    <a href="/admin" class="btn btn-outline-secondary">Back to Dashboard</a>
+  </div>
 
-  <main class="container my-4">
-    <% if (success && success.length) { %>
-      <div class="alert alert-success"><%= success[0] %></div>
-    <% } %>
-    <% if (error && error.length) { %>
-      <div class="alert alert-danger"><%= error[0] %></div>
-    <% } %>
+  <% const totalOrders = (orders && orders.length) || 0;
+     const pendingOrders = (orders || []).filter(function(ord){
+       return (ord.status || 'Pending Order') === 'Pending Order';
+     }).length;
+     const totalRevenue = (orders || []).reduce(function(sum, ord){
+       return sum + Number(ord.total || 0);
+     }, 0);
+  %>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <div>
-        <h2 class="fw-bold mb-0">Orders</h2>
-        <p class="text-muted mb-0">Review completed checkouts</p>
-      </div>
-      <a href="/admin" class="btn btn-outline-secondary">Back to Dashboard</a>
+  <div class="stats-row mb-4">
+    <div class="stat-card">
+      <small>Total Orders</small>
+      <p class="stat-value mb-1"><%= totalOrders %></p>
+      <p class="stat-note mb-0">All recorded orders</p>
     </div>
 
-    <div class="orders-shell">
-      <div class="filter-bar">
-        <div class="row g-3">
-          <div class="col-md-4">
-            <label class="form-label small text-muted mb-1">Filter by username</label>
-            <input type="text" class="form-control order-filter" data-filter-key="username" placeholder="e.g. kenneth">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label small text-muted mb-1">Filter by invoice number</label>
-            <input type="text" class="form-control order-filter" data-filter-key="invoice" placeholder="e.g. INV-1234">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label small text-muted mb-1">Filter by email</label>
-            <input type="text" class="form-control order-filter" data-filter-key="email" placeholder="e.g. user@email.com">
-          </div>
-        </div>
-      </div>
+    <div class="stat-card">
+      <small>Pending Orders</small>
+      <p class="stat-value mb-1"><%= pendingOrders %></p>
+      <p class="stat-note mb-0">Waiting for fulfillment</p>
+    </div>
 
-      <% if (!orders || !orders.length) { %>
-        <p class="text-center text-muted mb-0">No orders yet.</p>
-      <% } else { %>
-        <% orders.forEach(function(order) { %>
-          <div class="order-block" data-username="<%= (order.username || '').toLowerCase() %>" data-email="<%= (order.email || '').toLowerCase() %>" data-invoice="<%= (order.invoice_number || '').toLowerCase() %>">
-            <div class="order-header d-flex flex-wrap justify-content-between align-items-center">
-              <div>
-                <div class="badge-pill mb-1"><%= order.invoice_number %></div>
-                <h5 class="mb-0"><%= order.username || 'Customer' %></h5>
-                <small class="text-muted"><%= order.email || '' %></small>
+    <div class="stat-card">
+      <small>Total Revenue</small>
+      <p class="stat-value mb-1">$<%= totalRevenue.toFixed(2) %></p>
+      <p class="stat-note mb-0">Across all orders</p>
+    </div>
+  </div>
+
+  <div class="orders-shell">
+
+    <% if (!orders || !orders.length) { %>
+
+      <p class="text-center text-muted mb-0">No orders yet.</p>
+
+    <% } else { %>
+
+      <div class="order-layout">
+        <div class="order-content">
+
+          <div class="filter-bar">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">Filter by username</label>
+                <input type="text" class="form-control order-filter" data-filter-key="username" placeholder="e.g. kenneth">
               </div>
-              <div class="text-end">
-                <div class="fw-semibold">$<%= Number(order.total || 0).toFixed(2) %></div>
-                <small class="text-muted"><%= new Date(order.created_at).toLocaleString() %></small>
+
+              <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">Filter by invoice number</label>
+                <input type="text" class="form-control order-filter" data-filter-key="invoice" placeholder="e.g. INV-1234">
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">Filter by email</label>
+                <input type="text" class="form-control order-filter" data-filter-key="email" placeholder="e.g. user@email.com">
               </div>
             </div>
-            <div class="table-responsive mb-4">
-              <table class="table table-sm align-middle">
-                <thead>
+          </div>
+
+          <% orders.forEach(function(order) { 
+               const derivedSubtotal = (order.items || []).reduce(function(sum, item) {
+                 return sum + Number(item.line_total || 0);
+               }, 0);
+
+               const orderSubtotal = (typeof order.subtotal === 'number' ? Number(order.subtotal) : derivedSubtotal);
+
+               const gstRate = 0.09;
+               const gstAmount = (typeof order.taxAmount === 'number' ? Number(order.taxAmount) : orderSubtotal * gstRate);
+
+               const orderTotal = (typeof order.total === 'number' ? Number(order.total) : orderSubtotal + gstAmount);
+
+               const statusSteps = orderStatuses || ['Pending Order', 'Preparing Order', 'Out for Delivery', 'Completed'];
+               const statusIcons = ['📦','🛠️','🚚','✅'];
+               const statusSubtext = ['Order submitted','Packing items','On the way','Delivered'];
+
+               const currentStatus = (order.status || 'Pending Order');
+               const activeIndex = statusSteps.indexOf(currentStatus) >= 0 ? statusSteps.indexOf(currentStatus) : 0;
+          %>
+
+            <div class="order-card"
+                 tabindex="0"
+                 data-username="<%= (order.username || '').toLowerCase() %>"
+                 data-email="<%= (order.email || '').toLowerCase() %>"
+                 data-invoice="<%= (order.invoice_number || '').toLowerCase() %>"
+                 data-customer="<%= order.username || 'Customer' %>"
+                 data-status="<%= currentStatus %>"
+                 data-subtotal="<%= orderSubtotal.toFixed(2) %>"
+                 data-gst="<%= gstAmount.toFixed(2) %>"
+                 data-total="<%= orderTotal.toFixed(2) %>"
+                 data-link="/admin/orders/<%= order.id %>/invoice"
+                 data-edit-link="/admin/orders/<%= order.id %>/edit">
+
+              <div class="order-header d-flex flex-wrap justify-content-between align-items-center">
+                <div>
+                  <span class="badge-pill mb-1"><%= order.invoice_number %></span>
+                  <h5 class="mb-0"><%= order.username || 'Customer' %></h5>
+                  <small class="text-muted"><%= order.email || '' %></small>
+                </div>
+
+                <div class="text-end">
+                  <p class="text-muted mb-1">Total Paid</p>
+                  <h4 class="mb-0" style="color:#ff6fa3;">$<%= Number(order.total || 0).toFixed(2) %></h4>
+                  <small class="text-muted d-block"><%= new Date(order.created_at).toLocaleString() %></small>
+                </div>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                  <thead>
                   <tr>
                     <th>Product</th>
                     <th class="text-center">Qty</th>
-                    <th class="text-end">Price</th>
+                    <th class="text-center">Price</th>
                     <th class="text-end">Line Total</th>
                   </tr>
-                </thead>
-                <tbody>
+                  </thead>
+                  <tbody>
+
                   <% (order.items || []).forEach(function(item) { %>
                     <tr>
-                      <td><%= item.product_name %></td>
+                      <td><strong><%= item.product_name %></strong></td>
                       <td class="text-center"><%= item.quantity %></td>
-                      <td class="text-end">$<%= Number(item.price || 0).toFixed(2) %></td>
+                      <td class="text-center">$<%= Number(item.price || 0).toFixed(2) %></td>
                       <td class="text-end">$<%= Number(item.line_total || 0).toFixed(2) %></td>
                     </tr>
                   <% }); %>
-                </tbody>
-              </table>
+
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="order-status-bar">
+                <% statusSteps.forEach(function(status, index) { %>
+                  <div class="status-step <%= index <= activeIndex ? 'active' : '' %>">
+                    <div class="status-icon"><%= statusIcons[index] || '●' %></div>
+                    <div class="status-label"><%= status %></div>
+                    <div class="status-subtext"><%= statusSubtext[index] || '' %></div>
+                  </div>
+                <% }); %>
+              </div>
+
+              <div class="order-summary mt-3">
+                <div class="d-flex flex-column gap-2">
+                  <div class="label">Actions</div>
+                  <a class="btn btn-sm btn-outline-pink" href="/admin/orders/<%= order.id %>/invoice">View Invoice</a>
+                  <a class="btn btn-sm btn-outline-pink" href="/admin/orders/<%= order.id %>/edit">Edit Status</a>
+                </div>
+
+                <div class="order-totals">
+                  <div>
+                    <div class="label">Subtotal</div>
+                    <div class="value">$<%= orderSubtotal.toFixed(2) %></div>
+                  </div>
+                  <div>
+                    <div class="label">GST (9%)</div>
+                    <div class="value">$<%= gstAmount.toFixed(2) %></div>
+                  </div>
+                  <div>
+                    <div class="label">Grand Total</div>
+                    <div class="total-value">$<%= orderTotal.toFixed(2) %></div>
+                  </div>
+                </div>
+              </div>
+
             </div>
+
+          <% }); %>
+
+        </div>
+
+        <aside class="order-sidebar" id="orderSidebar">
+          <span class="badge text-bg-light sidebar-customer" data-field="customer">Hover an order</span>
+          <h5 class="mb-3">Order Overview</h5>
+          <div class="sidebar-item">
+            <div class="sidebar-label">Invoice</div>
+            <div class="sidebar-value" data-field="invoice">Select an order</div>
           </div>
-        <% }); %>
-      <% } %>
-    </div>
-  </main>
+          <div class="sidebar-item">
+            <div class="sidebar-label">Status</div>
+            <div class="sidebar-value" data-field="status">&mdash;</div>
+          </div>
+          <div class="sidebar-item">
+            <div class="sidebar-label">Subtotal</div>
+            <div class="sidebar-value" data-field="subtotal">$0.00</div>
+          </div>
+          <div class="sidebar-item">
+            <div class="sidebar-label">GST (9%)</div>
+            <div class="sidebar-value" data-field="gst">$0.00</div>
+          </div>
+          <div class="sidebar-item">
+            <div class="sidebar-label">Grand Total</div>
+            <div class="sidebar-value" data-field="total">$0.00</div>
+          </div>
+          <div class="sidebar-divider"></div>
+          <div class="sidebar-cta">
+            <a class="btn btn-outline-pink btn-sm w-100" data-field="link" href="#" target="_blank">View Invoice</a>
+            <a class="btn btn-outline-pink btn-sm w-100" data-field="edit-link" href="#" target="_blank">Edit Status</a>
+          </div>
+        </aside>
+      </div>
 
-  <%- include('partials/footer') %>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    (function () {
-      const inputs = document.querySelectorAll('.order-filter');
-      const blocks = document.querySelectorAll('.order-block');
+    <% } %>
 
-      function applyFilters() {
-        const filters = {};
-        inputs.forEach((input) => {
-          const key = input.dataset.filterKey;
-          filters[key] = input.value.trim().toLowerCase();
+  </div>
+
+</main>
+
+<%- include('partials/footer') %>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Filter logic using .order-card
+  (function () {
+    const inputs = document.querySelectorAll('.order-filter');
+    const cards  = document.querySelectorAll('.order-card');
+
+    function applyFilters() {
+      const filters = {};
+
+      inputs.forEach((input) => {
+        const key = input.dataset.filterKey;
+        filters[key] = input.value.trim().toLowerCase();
+      });
+
+      cards.forEach((card) => {
+        let visible = true;
+        Object.keys(filters).forEach((key) => {
+          const filterVal = filters[key];
+          if (filterVal && !(card.dataset[key] || '').includes(filterVal)) {
+            visible = false;
+          }
         });
+        card.style.display = visible ? '' : 'none';
+      });
+    }
 
-        blocks.forEach((block) => {
-          let visible = true;
-          Object.keys(filters).forEach((key) => {
-            const filterVal = filters[key];
-            if (filterVal && !(block.dataset[key] || '').includes(filterVal)) {
-              visible = false;
-            }
-          });
-          block.style.display = visible ? '' : 'none';
-        });
+    inputs.forEach((input) =>
+      input.addEventListener('input', applyFilters)
+    );
+  })();
+
+  // Sticky sidebar overview - same behaviour as orders.ejs
+  (function () {
+    const sidebar = document.getElementById('orderSidebar');
+    if (!sidebar) return;
+
+    const fields = {
+      customer: sidebar.querySelector('[data-field="customer"]'),
+      invoice:  sidebar.querySelector('[data-field="invoice"]'),
+      status:   sidebar.querySelector('[data-field="status"]'),
+      subtotal: sidebar.querySelector('[data-field="subtotal"]'),
+      gst:      sidebar.querySelector('[data-field="gst"]'),
+      total:    sidebar.querySelector('[data-field="total"]'),
+      link:     sidebar.querySelector('[data-field="link"]'),
+      editLink: sidebar.querySelector('[data-field="edit-link"]')
+    };
+
+    function updateSidebar(card) {
+      if (!card) return;
+      if (fields.customer) {
+        fields.customer.textContent = card.dataset.customer || 'Customer';
       }
+      fields.invoice.textContent  = card.dataset.invoice || '\u2014';
+      fields.status.textContent   = card.dataset.status  || 'Pending Order';
+      fields.subtotal.textContent = '$' + (card.dataset.subtotal || '0.00');
+      fields.gst.textContent      = '$' + (card.dataset.gst      || '0.00');
+      fields.total.textContent    = '$' + (card.dataset.total    || '0.00');
+      if (fields.link) {
+        fields.link.href = card.dataset.link || '#';
+      }
+      if (fields.editLink) {
+        fields.editLink.href = card.dataset.editLink || '#';
+      }
+    }
 
-      inputs.forEach((input) => input.addEventListener('input', applyFilters));
-    })();
-  </script>
+    const cards = document.querySelectorAll('.order-card');
+    cards.forEach((card) => {
+      card.addEventListener('mouseenter', () => updateSidebar(card));
+      card.addEventListener('focusin',    () => updateSidebar(card));
+    });
+    if (cards.length) {
+      updateSidebar(cards[0]);
+    }
+  })();
+</script>
+
 </body>
 </html>

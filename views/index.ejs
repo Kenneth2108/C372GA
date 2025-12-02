@@ -118,6 +118,9 @@
 
 <body>
   <!-- Navbar. -->
+  <% if (user && user.role === 'user') { %>
+    <%- include('partials/user_navbar') %>
+  <% } else { %>
   <nav class="navbar navbar-expand-lg">
     <div class="container">
       <a class="navbar-brand" href="/">🐾 FluffyFriend</a>
@@ -131,9 +134,13 @@
       <div class="collapse navbar-collapse" id="ffNav">
         <ul class="navbar-nav ms-auto">
           <% if (user) { %>
-            <li class="nav-item"><a class="nav-link" href="/UserProducts">View All Products</a></li>
-            <li class="nav-item"><a class="nav-link" href="/cart">Go To Cart</a></li>
-            <% if (user.role === 'user') { %>
+            <% if (user.role === 'admin' || user.role === 'master') { %>
+              <li class="nav-item"><a class="nav-link" href="/admin/users">Manage Users</a></li>
+              <li class="nav-item"><a class="nav-link" href="/admin/products">Manage Products</a></li>
+              <li class="nav-item"><a class="nav-link" href="/admin/orders">Manage Orders</a></li>
+            <% } else { %>
+              <li class="nav-item"><a class="nav-link" href="/UserProducts">View All Products</a></li>
+              <li class="nav-item"><a class="nav-link" href="/cart">Go To Cart</a></li>
               <li class="nav-item"><a class="nav-link" href="/orders">My Orders</a></li>
             <% } %>
             <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
@@ -145,6 +152,7 @@
       </div>
     </div>
   </nav>
+  <% } %>
 
   <main>
 
@@ -155,8 +163,17 @@
   <div class="welcome-card">
     <% if (user) { %>
       <h2>Welcome back <%= user.username %> to FluffyFriend! <span class="logo-paw">🐾</span></h2>
-      <p>Your one-stop pet shop for all furry friends.</p>
-      <a href="/UserProducts" class="btn btn-pink text-white px-4">View All Products</a>
+      <% if (user.role === 'admin' || user.role === 'master') { %>
+        <p>Quick access to manage the community and catalog.</p>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+          <a href="/admin/users" class="btn btn-pink text-white px-4">Manage Users</a>
+          <a href="/admin/products" class="btn btn-outline-pink px-4" style="border:1px solid #ff6fa3; color:#ff6fa3;">Manage Products</a>
+          <a href="/admin/orders" class="btn btn-outline-pink px-4" style="border:1px solid #ff6fa3; color:#ff6fa3;">Manage Orders</a>
+        </div>
+      <% } else { %>
+        <p>Your one-stop pet shop for all furry friends.</p>
+        <a href="/UserProducts" class="btn btn-pink text-white px-4">View All Products</a>
+      <% } %>
     <% } else { %>
       <h2>Welcome to FluffyFriend! <span class="logo-paw">🐾</span></h2>
       <p>Your one-stop pet shop for all furry friends.</p>
@@ -168,7 +185,9 @@
   <div class="container popular-products">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h4 class="mb-0 fw-bold">Popular Products 🐕</h4>
-      <a href="/UserProducts" class="btn btn-pink text-white px-4">View All Products</a>
+      <% if (!(user && (user.role === 'admin' || user.role === 'master'))) { %>
+        <a href="/UserProducts" class="btn btn-pink text-white px-4">View All Products</a>
+      <% } %>
     </div>
 
     <div class="row g-4">
@@ -178,10 +197,9 @@
         <h5>Premium Dog Food</h5>
         <p class="text-muted small mb-0">Healthy and tasty meals for your pet.</p>
 
-        <form action="/add-to-cart/1" method="POST">
-          <input type="hidden" name="quantity" value="1">
-          <button type="submit" class="btn mt-3" style="background-color:#ff6fa3; color:white;">Add to Cart</button>
-        </form>
+        <% if (!(user && (user.role === 'admin' || user.role === 'master'))) { %>
+        <a href="/UserProducts?category=Food" class="btn mt-3" style="background-color:#ff6fa3; color:white;">View Food</a>
+        <% } %>
 
       </div>
     </div>
@@ -192,10 +210,9 @@
         <h5>Interactive Cat Toy</h5>
         <p class="text-muted small mb-0">Keeps your cat active and happy.</p>
 
-        <form action="/add-to-cart/2" method="POST">
-          <input type="hidden" name="quantity" value="1">
-          <button type="submit" class="btn mt-3" style="background-color:#ff659d; color:white;">Add to Cart</button>
-        </form>
+        <% if (!(user && (user.role === 'admin' || user.role === 'master'))) { %>
+        <a href="/UserProducts?category=Toys" class="btn mt-3" style="background-color:#ff659d; color:white;">View Toys</a>
+        <% } %>
 
       </div>
     </div>
@@ -206,10 +223,9 @@
         <h5>Pet Accessories</h5>
         <p class="text-muted small mb-0">Comfortable cages and play tools.</p>
 
-        <form action="/add-to-cart/3" method="POST">
-          <input type="hidden" name="quantity" value="1">
-          <button type="submit" class="btn mt-3" style="background-color:#ff6fa3; color:white;">Add to Cart</button>
-        </form>
+        <% if (!(user && (user.role === 'admin' || user.role === 'master'))) { %>
+        <a href="/UserProducts?category=Grooming" class="btn mt-3" style="background-color:#ff6fa3; color:white;">View Grooming</a>
+        <% } %>
 
       </div>
     </div>

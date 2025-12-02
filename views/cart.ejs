@@ -11,7 +11,7 @@
       font-family: 'Segoe UI', sans-serif;
     }
 
-    /* Pink Navbar */
+    /* Pink Navbar (shared styling for partial) */
     .navbar {
       background: linear-gradient(90deg, #ff8db8, #ff6fa3);
     }
@@ -85,29 +85,8 @@
 
 <body>
 
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-sm">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/">🐾 FluffyFriend</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="collapse navbar-collapse" id="collapsibleNavbar">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="/UserProducts">Products</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link active" href="/cart">View Cart</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/logout">Logout</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+  <!-- ✅ Use shared partial navbar -->
+  <%- include('partials/user_navbar') %>
 
   <!-- Cart Content -->
   <div class="container">
@@ -184,6 +163,4 @@
 
   <%- include('partials/footer') %>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/

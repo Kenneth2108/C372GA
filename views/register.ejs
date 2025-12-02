@@ -72,13 +72,7 @@
               <label class="form-label">Contact</label>
               <input name="contact" class="form-control" value="<%= formData ? formData.contact : '' %>" required>
             </div>
-            <div class="mb-3">
-              <label class="form-label">Role</label>
-              <select name="role" class="form-select" required>
-                <option value="user" <%= formData && formData.role === 'user' ? 'selected' : '' %>>User</option>
-                <option value="admin" <%= formData && formData.role === 'admin' ? 'selected' : '' %>>Admin</option>
-              </select>
-            </div>
+            <input type="hidden" name="role" value="user">
           </div>
 
           <!-- RIGHT: 2FA toggle + QR -->

@@ -5,6 +5,22 @@
   <title>Checkout Invoice</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
+    /* Pink Navbar (shared styling for partial) */
+    .navbar {
+      background: linear-gradient(90deg, #ff8db8, #ff6fa3);
+    }
+    .navbar-brand, .nav-link {
+      color: white !important;
+      font-weight: 500;
+    }
+    .nav-link.active {
+      text-decoration: underline;
+    }
+    .nav-link:hover {
+      background-color: #ff8db8;
+      border-radius: 6px;
+      color: #fff !important;
+    }
     html {
       height: 100%;
     }
@@ -21,13 +37,6 @@
       align-items: flex-start;
       justify-content: center;
       padding-bottom: 40px;
-    }
-    .navbar {
-      background: linear-gradient(90deg, #ff8db8, #ff6fa3);
-    }
-    .navbar-brand, .nav-link {
-      color: #fff !important;
-      font-weight: 600;
     }
     .invoice-card {
       background: #fff;
@@ -74,19 +83,11 @@
     }
   </style>
 </head>
+
 <body>
-  <nav class="navbar navbar-expand-sm">
-    <div class="container">
-      <a class="navbar-brand" href="/">🐾 FluffyFriend</a>
-      <div class="collapse navbar-collapse">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="/UserProducts">Products</a></li>
-          <li class="nav-item"><a class="nav-link" href="/cart">View Cart</a></li>
-          <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+
+  <!-- ✅ USER NAV PARTIAL -->
+  <%- include('partials/user_navbar', { active: '' }) %>
 
   <main class="ff-main w-100">
     <div class="container invoice-card">
@@ -103,73 +104,80 @@
       </div>
 
       <div class="table-responsive mt-4">
-      <table class="table table-bordered align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Product</th>
-            <th class="text-center" style="width:110px;">Price</th>
-            <th class="text-center" style="width:110px;">Quantity</th>
-            <th class="text-end" style="width:150px;">Line Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% items.forEach(function(item) { %>
+        <table class="table table-bordered align-middle">
+          <thead class="table-light">
             <tr>
-              <td>
-                <strong><%= item.productName %></strong>
-                <% if (item.image) { %>
-                  <div class="text-muted small mt-1">SKU: <%= item.product_id %></div>
-                <% } %>
-              </td>
-              <td class="text-center">$<%= item.price.toFixed(2) %></td>
-              <td class="text-center"><%= item.quantity %></td>
-              <td class="text-end">$<%= item.lineTotal.toFixed(2) %></td>
+              <th>Product</th>
+              <th class="text-center" style="width:110px;">Price</th>
+              <th class="text-center" style="width:110px;">Quantity</th>
+              <th class="text-end" style="width:150px;">Line Total</th>
             </tr>
-          <% }); %>
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            <% items.forEach(function(item) { %>
+              <tr>
+                <td><strong><%= item.productName %></strong></td>
+                <td class="text-center">$<%= item.price.toFixed(2) %></td>
+                <td class="text-center"><%= item.quantity %></td>
+                <td class="text-end">$<%= item.lineTotal.toFixed(2) %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
 
       <div class="row mt-4">
-      <div class="col-md-6">
-        <div class="summary-box h-100">
-          <h5>Notes</h5>
-          <p class="text-muted mb-0">
-            Thank you for shopping with FluffyFriend. Save this invoice for your records.
-            Reach our support at paws@fluffyfriend.com for any questions.
-          </p>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="summary-box">
-          <div class="d-flex justify-content-between">
-            <span>Subtotal</span>
-            <span>$<%= summary.subtotal.toFixed(2) %></span>
-          </div>
-          <div class="d-flex justify-content-between">
-            <span>Tax (<%= (summary.taxRate * 100).toFixed(0) %>%)</span>
-            <span>$<%= summary.taxAmount.toFixed(2) %></span>
-          </div>
-          <hr>
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Total</h5>
-            <div class="amount">$<%= summary.total.toFixed(2) %></div>
+        <div class="col-md-6">
+          <div class="summary-box h-100">
+            <h5>Notes</h5>
+            <p class="text-muted mb-0">
+              Thank you for shopping with FluffyFriend. Save this invoice for your records.
+              Reach our support at paws@fluffyfriend.com for any questions.
+            </p>
           </div>
         </div>
+
+        <div class="col-md-6">
+          <div class="summary-box">
+            <div class="d-flex justify-content-between">
+              <span>Subtotal</span>
+              <span>$<%= summary.subtotal.toFixed(2) %></span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span>Tax (<%= (summary.taxRate * 100).toFixed(0) %>%)</span>
+              <span>$<%= summary.taxAmount.toFixed(2) %></span>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Total</h5>
+              <div class="amount">$<%= summary.total.toFixed(2) %></div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+
+      <%
+        const backHref = (typeof backLink !== 'undefined')
+          ? backLink
+          : (adminView ? '/admin/orders' : '/cart');
+        const backLabelText = (typeof backLabel !== 'undefined')
+          ? backLabel
+          : (adminView ? 'Back to Orders' : 'Back to Cart');
+      %>
 
       <div class="mt-4 d-flex justify-content-between">
-        <a href="/cart" class="btn btn-outline-secondary">Back to Cart</a>
+        <a href="<%= backHref %>" class="btn btn-outline-secondary"><%= backLabelText %></a>
         <div class="d-flex gap-2">
           <button class="btn btn-outline-pink" onclick="window.print()">Print</button>
           <a href="/" class="btn btn-pink">Return Home</a>
         </div>
       </div>
+
     </div>
   </main>
 
   <%- include('partials/footer') %>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -42,8 +42,16 @@ const checkAuthenticated = (req, res, next) => {
 };
 
 const checkAdmin = (req, res, next) => {
-  if (req.session.user && req.session.user.role === 'admin') return next();
+  if (req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'master')) {
+    return next();
+  }
   req.flash('error', 'Access denied');
+  return res.redirect('/');
+};
+
+const checkMaster = (req, res, next) => {
+  if (req.session.user && req.session.user.role === 'master') return next();
+  req.flash('error', 'Master access required');
   return res.redirect('/');
 };
 
@@ -57,6 +65,7 @@ module.exports = {
   registerMiddleware,
   checkAuthenticated,
   checkAdmin,
+  checkMaster,
   checkUser,
   upload
 };

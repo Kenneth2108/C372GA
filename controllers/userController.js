@@ -12,6 +12,10 @@ function isValidPhone(phone) {
   return typeof phone === 'string' && phoneRegex.test(phone);
 }
 
+function isMaster(req) {
+  return req.session && req.session.user && req.session.user.role === 'master';
+}
+
 // ----------------------- Admin: Users CRUD -----------------------
 
 // List users (callback style)
@@ -65,10 +69,17 @@ function createUser(req, res) {
   const password = body.password;
   const address = body.address;
   const contact = body.contact;
-  const role = body.role;
+  const role = body.role || 'user';
+  const allowedRoles = ['user', 'admin', 'master'];
+  const requesterRole = req.session.user && req.session.user.role;
+  const requesterIsMaster = requesterRole === 'master';
 
   if (!username || !email || !password || !address || !contact || !role) {
     req.flash('error', 'All fields are required.');
+    return res.redirect('/admin/users/new');
+  }
+  if (allowedRoles.indexOf(role) === -1) {
+    req.flash('error', 'Invalid role selected.');
     return res.redirect('/admin/users/new');
   }
   if (!isValidPhone(contact)) {
@@ -77,6 +88,10 @@ function createUser(req, res) {
   }
   if (!isStrongPassword(password)) {
     req.flash('error', 'Password must be at least 6 characters and include uppercase, lowercase, and a number.');
+    return res.redirect('/admin/users/new');
+  }
+  if (!requesterIsMaster && (role === 'admin' || role === 'master')) {
+    req.flash('error', 'Only master admins can create admin or master accounts.');
     return res.redirect('/admin/users/new');
   }
 
@@ -128,6 +143,10 @@ function editUserForm(req, res) {
 function updateUser(req, res) {
   const id = req.params.id;
   const body = req.body;
+  const allowedRoles = ['user', 'admin', 'master'];
+  const requesterRole = req.session.user && req.session.user.role;
+  const requesterIsMaster = requesterRole === 'master';
+  const requesterIsAdmin = requesterRole === 'admin';
 
   if (!body.username || !body.email || !body.address || !body.contact || !body.role) {
     req.flash('error', 'Missing required fields.');
@@ -137,67 +156,120 @@ function updateUser(req, res) {
     req.flash('error', 'Contact number must be exactly 8 digits.');
     return res.redirect('/admin/users/' + id + '/edit');
   }
+  if (allowedRoles.indexOf(body.role) === -1) {
+    req.flash('error', 'Invalid role selected.');
+    return res.redirect('/admin/users/' + id + '/edit');
+  }
 
-  // If password provided, update with password; else without
-  if (body.password && body.password.length > 0) {
-    if (!isStrongPassword(body.password)) {
-      req.flash('error', 'Password must be at least 6 characters and include uppercase, lowercase, and a number.');
+  Users.getById(id, function (err, target) {
+    if (err) {
+      console.error(err);
+      req.flash('error', 'User load failed');
+      return res.redirect('/admin/users');
+    }
+    if (!target) {
+      req.flash('error', 'User not found');
+      return res.redirect('/admin/users');
+    }
+
+    if (!requesterIsMaster && (target.role === 'admin' || target.role === 'master')) {
+      req.flash('error', 'Only master admins can edit admin or master accounts.');
+      return res.redirect('/admin/users');
+    }
+    if (!requesterIsMaster && body.role === 'master') {
+      req.flash('error', 'Only master admins can assign master roles.');
       return res.redirect('/admin/users/' + id + '/edit');
     }
-    Users.updateUserWithPassword(
-      id,
-      {
-        username: body.username,
-        email: body.email,
-        password: body.password,
-        address: body.address,
-        contact: body.contact,
-        role: body.role
-      },
-      function (err /*, result */) {
-        if (err) {
-          console.error(err);
-          req.flash('error', 'Update failed.');
-          return res.redirect('/admin/users/' + id + '/edit');
-        }
-        req.flash('success', 'User updated (password changed).');
-        return res.redirect('/admin/users');
+    if (!requesterIsMaster && !requesterIsAdmin && body.role === 'admin') {
+      req.flash('error', 'Only admin or master accounts can assign admin roles.');
+      return res.redirect('/admin/users/' + id + '/edit');
+    }
+
+    const nextStep = function () {
+      req.flash('success', 'User updated.');
+      return res.redirect('/admin/users');
+    };
+
+    if (body.password && body.password.length > 0) {
+      if (!isStrongPassword(body.password)) {
+        req.flash('error', 'Password must be at least 6 characters and include uppercase, lowercase, and a number.');
+        return res.redirect('/admin/users/' + id + '/edit');
       }
-    );
-  } else {
-    Users.updateUser(
-      id,
-      {
-        username: body.username,
-        email: body.email,
-        address: body.address,
-        contact: body.contact,
-        role: body.role
-      },
-      function (err /*, result */) {
-        if (err) {
-          console.error(err);
-          req.flash('error', 'Update failed.');
-          return res.redirect('/admin/users/' + id + '/edit');
+      Users.updateUserWithPassword(
+        id,
+        {
+          username: body.username,
+          email: body.email,
+          password: body.password,
+          address: body.address,
+          contact: body.contact,
+          role: body.role
+        },
+        function (updateErr) {
+          if (updateErr) {
+            console.error(updateErr);
+            req.flash('error', 'Update failed.');
+            return res.redirect('/admin/users/' + id + '/edit');
+          }
+          nextStep();
         }
-        req.flash('success', 'User updated.');
-        return res.redirect('/admin/users');
-      }
-    );
-  }
+      );
+    } else {
+      Users.updateUser(
+        id,
+        {
+          username: body.username,
+          email: body.email,
+          address: body.address,
+          contact: body.contact,
+          role: body.role
+        },
+        function (updateErr) {
+          if (updateErr) {
+            console.error(updateErr);
+            req.flash('error', 'Update failed.');
+            return res.redirect('/admin/users/' + id + '/edit');
+          }
+          nextStep();
+        }
+      );
+    }
+  });
 }
 
 // Delete (admin)
 function deleteUser(req, res) {
   const id = req.params.id;
-  Users.deleteUser(id, function (err /*, result */) {
+  const requesterIsMaster = isMaster(req);
+
+  Users.getById(id, function (err, target) {
     if (err) {
       console.error(err);
-      req.flash('error', 'Delete failed.');
+      req.flash('error', 'Failed to load user.');
       return res.redirect('/admin/users');
     }
-    req.flash('success', 'User deleted.');
-    return res.redirect('/admin/users');
+    if (!target) {
+      req.flash('error', 'User not found.');
+      return res.redirect('/admin/users');
+    }
+    if (String(req.session.user.id) === String(id)) {
+      req.flash('error', 'You cannot delete your own account.');
+      return res.redirect('/admin/users');
+    }
+    if (!requesterIsMaster && (target.role === 'admin' || target.role === 'master')) {
+      req.flash('error', 'Only master admins can remove admin or master accounts.');
+      return res.redirect('/admin/users');
+    }
+
+    Users.deleteUser(id, function (deleteErr) {
+      if (deleteErr) {
+        console.error(deleteErr);
+        req.flash('error', 'Delete failed.');
+        return res.redirect('/admin/users');
+      }
+      req.flash('success', 'User deleted.');
+      return res.redirect('/admin/users');
+    });
   });
 }
 
@@ -205,7 +277,10 @@ function deleteUser(req, res) {
 function updateUserRole(req, res) {
   const id = req.params.id;
   const role = req.body.role;
-  const allowedRoles = ['admin', 'user'];
+  const allowedRoles = ['user', 'admin', 'master'];
+  const requesterRole = req.session.user && req.session.user.role;
+  const requesterIsMaster = requesterRole === 'master';
+  const requesterIsAdmin = requesterRole === 'admin';
 
   if (!role || allowedRoles.indexOf(role) === -1) {
     req.flash('error', 'Invalid role selected.');
@@ -215,6 +290,14 @@ function updateUserRole(req, res) {
     req.flash('error', 'You cannot change your own role.');
     return res.redirect('/admin/users');
   }
+  if (!requesterIsMaster && role === 'master') {
+    req.flash('error', 'Only master admins can assign master roles.');
+    return res.redirect('/admin/users');
+  }
+  if (!requesterIsMaster && !requesterIsAdmin && role === 'admin') {
+    req.flash('error', 'Only admin or master accounts can assign admin roles.');
+    return res.redirect('/admin/users');
+  }
 
   Users.getById(id, function (err, target) {
     if (err || !target) {
@@ -222,8 +305,9 @@ function updateUserRole(req, res) {
       req.flash('error', 'User not found.');
       return res.redirect('/admin/users');
     }
-    if (target.role === 'admin') {
-      req.flash('error', 'Admin roles cannot be edited.');
+
+    if (!requesterIsMaster && (target.role === 'admin' || target.role === 'master')) {
+      req.flash('error', 'Only master admins can edit admin or master accounts.');
       return res.redirect('/admin/users');
     }
 
@@ -291,11 +375,11 @@ module.exports.register = function (req, res) {
   const password = body.password;
   const address = body.address;
   const contact = body.contact;
-  const role = body.role;
+  const role = 'user';
   const enable2fa = body.enable2fa;
   const twofa_token = body.twofa_token;
 
-  if (!username || !email || !password || !address || !contact || !role) {
+  if (!username || !email || !password || !address || !contact) {
     req.flash('error', 'All fields are required.');
     req.flash('formData', body);
     return res.redirect('/register');
@@ -389,7 +473,7 @@ module.exports.login = function (req, res) {
 
     req.session.user = u;
     req.flash('success', 'Login successful!');
-    if (u.role === 'admin') return res.redirect('/admin');
+    if (u.role === 'admin' || u.role === 'master') return res.redirect('/admin');
     return res.redirect('/');
   });
 };
@@ -523,9 +607,36 @@ module.exports.products = function (req, res) {
 
 // Admin dashboard view
 module.exports.adminDashboard = function (req, res) {
-  res.render('admin', {
-    user: req.session.user,
-    success: req.flash('success'),
-    error: req.flash('error')
-  });
+  const stats = { users: 0, products: 0, orders: 0 };
+
+  function queryCount(sql, key) {
+    return new Promise((resolve) => {
+      connection.query(sql, function (err, rows) {
+        if (err) {
+          console.error('Failed to load dashboard stat for %s:', key, err);
+          return resolve();
+        }
+        const value = rows && rows[0] && rows[0].count != null ? Number(rows[0].count) : 0;
+        stats[key] = isNaN(value) ? 0 : value;
+        resolve();
+      });
+    });
+  }
+
+  Promise.all([
+    queryCount('SELECT COUNT(*) AS count FROM users', 'users'),
+    queryCount('SELECT COUNT(*) AS count FROM products', 'products'),
+    queryCount('SELECT COUNT(*) AS count FROM orders', 'orders')
+  ])
+    .catch(function (err) {
+      console.error('Dashboard stats failed:', err);
+    })
+    .finally(function () {
+      res.render('admin', {
+        user: req.session.user,
+        stats: stats,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    });
 };

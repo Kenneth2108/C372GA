@@ -19,7 +19,7 @@ function normalizeCartItems(cartItems) {
 
 function buildSummary(items) {
   const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
-  const taxRate = 0; // Extend if tax is required later.
+  const taxRate = 0.09; // 9% GST
   const taxAmount = subtotal * taxRate;
   return {
     subtotal,
@@ -109,6 +109,9 @@ exports.showInvoice = function (req, res) {
     invoiceMeta: {
       number: invoiceMeta.number,
       date: invoiceDate
-    }
+    },
+    adminView: false,
+    backLink: '/cart',
+    backLabel: 'Back to Cart'
   });
 };

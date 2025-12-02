@@ -28,11 +28,23 @@
       border-radius: 6px;
     }
     .order-card {
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 15px 40px rgba(255, 111, 163, 0.2);
+      border-radius: 18px;
       padding: 24px;
       margin-bottom: 24px;
+      background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #ffe0ef, #fff6fb);
+      background-origin: border-box;
+      background-clip: padding-box, border-box;
+      box-shadow: 0 12px 30px rgba(255, 111, 163, 0.15);
+      border: 1px solid transparent;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .order-card:nth-of-type(even) {
+      background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #fce9ff, #fff);
+    }
+    .order-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 25px 55px rgba(255, 111, 163, 0.25);
+      background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #ff9fd3, #ffd4e8);
     }
     .order-header {
       border-bottom: 1px solid rgba(0,0,0,0.05);
@@ -45,12 +57,225 @@
     .table > :not(caption) > * > * {
       background-color: transparent;
     }
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 18px 20px;
+      box-shadow: 0 20px 45px rgba(255,111,163,0.18);
+    }
+    .stat-card small {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #b98ca3;
+      font-weight: 600;
+    }
+    .stat-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #ff6fa3;
+      margin-bottom: 0;
+    }
+    .stat-note {
+      font-size: 0.85rem;
+      color: #9c6d87;
+    }
+    .order-layout {
+      display: flex;
+      gap: 24px;
+    }
+    .order-content {
+      flex: 1 1 auto;
+    }
+    .order-sidebar {
+      width: 280px;
+      position: sticky;
+      top: 90px;
+      align-self: flex-start;
+      background: #fff;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    }
+    .order-sidebar h5 {
+      font-weight: 700;
+      color: #ff6fa3;
+    }
+    .sidebar-item {
+      margin-bottom: 16px;
+    }
+    .sidebar-label {
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      color: #a66384;
+      letter-spacing: 0.05em;
+    }
+    .sidebar-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    @media (max-width: 992px) {
+      .order-layout {
+        flex-direction: column;
+      }
+      .order-sidebar {
+        width: 100%;
+        position: relative;
+        top: auto;
+      }
+    }
+    .order-summary {
+      background: #fff5fa;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: inset 0 0 0 1px rgba(255,111,163,0.15);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    .summary-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #a66384;
+      margin-bottom: 4px;
+    }
+    .summary-value {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    .summary-total {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #ff6fa3;
+    }
+    .btn-outline-pink {
+      border: 1px solid #ff6fa3;
+      color: #ff6fa3;
+    }
+    .btn-outline-pink:hover {
+      background: #ff6fa3;
+      color: #fff;
+    }
+    .order-status-bar {
+      background: #fff8fb;
+      border-radius: 16px;
+      padding: 24px 16px 12px;
+      display: flex;
+      gap: 12px;
+      position: relative;
+      margin-top: 16px;
+    }
+    .order-status-bar::before {
+      content: '';
+      position: absolute;
+      top: 44px;
+      left: 50px;
+      right: 50px;
+      height: 4px;
+      background: linear-gradient(90deg, rgba(255,173,206,0.6), rgba(255,239,247,0.9));
+      border-radius: 999px;
+      z-index: 0;
+    }
+    .status-step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      z-index: 1;
+    }
+    .status-step:not(:last-child)::after {
+      display: none;
+    }
+    .status-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid #ffd4e5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      transition: all 0.2s ease;
+      color: #a66384;
+    }
+    .status-icon::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      animation: pulse 2.8s ease-in-out infinite;
+      animation-play-state: paused;
+    }
+    .status-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #a66384;
+    }
+    .status-subtext {
+      font-size: 0.7rem;
+      color: #b98ca3;
+    }
+    .status-step.active .status-icon {
+      border-color: transparent;
+      background: linear-gradient(135deg, #ff6fa3, #ff9fd3);
+      color: #fff;
+      box-shadow: 0 10px 20px rgba(255,111,163,0.25);
+      transform: translateY(-2px);
+    }
+    .status-step.active .status-icon::after {
+      opacity: 1;
+      animation-play-state: running;
+    }
+    .status-step.active .status-label {
+      color: #ff6fa3;
+      font-weight: 600;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.6; }
+      50% { transform: scale(1.15); opacity: 0; }
+      100% { transform: scale(0.9); opacity: 0; }
+    }
+    .status-step.active .status-subtext {
+      color: #ff6fa3;
+    }
+    @media (max-width: 576px) {
+      .order-status-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .order-status-bar::before {
+        display: none;
+      }
+      .status-step {
+        flex-direction: row;
+        justify-content: flex-start;
+      }
+      .status-label,
+      .status-subtext {
+        text-align: left;
+      }
+    }
   </style>
 </head>
 <body>
   <nav class="navbar navbar-expand-lg">
     <div class="container">
-      <a class="navbar-brand" href="/">FluffyFriend</a>
+      <a class="navbar-brand" href="/">&#128062; FluffyFriend</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ordersNav">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -74,14 +299,74 @@
       <a href="/" class="btn btn-outline-secondary">Back to Home</a>
     </div>
 
-    <% if (!orders || orders.length === 0) { %>
+    <% 
+      const hasOrders = orders && orders.length;
+      const now = new Date();
+      const totalOrders = hasOrders ? orders.length : 0;
+      const monthSpent = (orders || []).reduce(function(sum, ord) {
+        const created = ord.createdAt ? new Date(ord.createdAt) : null;
+        if (created && created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear()) {
+          return sum + Number(ord.total || 0);
+        }
+        return sum;
+      }, 0);
+      const latestOrder = hasOrders ? orders[orders.length - 1] : null;
+      const latestStatus = latestOrder ? (latestOrder.status || 'Pending Order') : 'Pending Order';
+    %>
+
+    <% if (!hasOrders) { %>
       <div class="text-center py-5">
         <h5 class="text-muted">You have not placed any orders yet.</h5>
         <a href="/UserProducts" class="btn btn-pink text-white mt-3 px-4" style="background-color:#ff6fa3;border:none;">Start Shopping</a>
       </div>
     <% } else { %>
-      <% orders.forEach(function(order) { %>
-        <div class="order-card">
+      <div class="order-layout">
+        <div class="order-content">
+          <div class="stats-row">
+            <div class="stat-card">
+              <small>Total Orders</small>
+              <p class="stat-value mb-1"><%= totalOrders %></p>
+              <p class="stat-note mb-0">All-time purchases</p>
+            </div>
+            <div class="stat-card">
+              <small>Spent This Month</small>
+              <p class="stat-value mb-1">$<%= monthSpent.toFixed(2) %></p>
+              <p class="stat-note mb-0">Orders placed in <%= now.toLocaleString('default', { month: 'long' }) %></p>
+            </div>
+            <div class="stat-card">
+              <small>Latest Status</small>
+              <p class="stat-value mb-1" style="font-size:1.2rem;"><%= latestStatus %></p>
+              <p class="stat-note mb-0">From your most recent order</p>
+            </div>
+          </div>
+
+      <% orders.forEach(function(order) { 
+          const derivedSubtotal = (order.items || []).reduce(function(sum, item) {
+            return sum + Number(item.lineTotal || 0);
+          }, 0);
+          const orderSubtotal = (typeof order.subtotal === 'number' ? Number(order.subtotal) : derivedSubtotal);
+          const gstRate = 0.09;
+          const gstAmount = (typeof order.taxAmount === 'number' ? Number(order.taxAmount) : orderSubtotal * gstRate);
+          const orderTotal = (typeof order.total === 'number' ? Number(order.total) : orderSubtotal + gstAmount);
+          const statusSteps = ['Pending Order', 'Preparing Order', 'Out for Delivery', 'Completed'];
+          const statusIcons = ['📦', '🛠️', '🚚', '✅'];
+          const statusSubtext = [
+            'We received your order',
+            'Packing your goodies',
+            'Courier picked it up',
+            'Delivered with love'
+          ];
+          const currentStatus = (order.status || 'Pending Order');
+          const activeIndex = statusSteps.indexOf(currentStatus) >= 0 ? statusSteps.indexOf(currentStatus) : 0;
+      %>
+        <div class="order-card"
+             tabindex="0"
+             data-invoice="<%= order.invoiceNumber %>"
+             data-status="<%= currentStatus %>"
+             data-subtotal="<%= orderSubtotal.toFixed(2) %>"
+             data-gst="<%= gstAmount.toFixed(2) %>"
+             data-total="<%= orderTotal.toFixed(2) %>"
+             data-link="/orders/<%= order.id %>/invoice">
           <div class="order-header d-flex flex-wrap justify-content-between align-items-center">
             <div>
               <span class="badge badge-invoice">Invoice <%= order.invoiceNumber %></span>
@@ -122,12 +407,105 @@
           <% } else { %>
             <p class="text-muted mb-0">No line items found for this order.</p>
           <% } %>
+
+          <div class="order-status-bar">
+            <% statusSteps.forEach(function(status, index) { %>
+              <div class="status-step <%= index <= activeIndex ? 'active' : '' %>">
+                <div class="status-icon"><%= statusIcons[index] %></div>
+                <div class="status-label"><%= status %></div>
+                <div class="status-subtext"><%= statusSubtext[index] %></div>
+              </div>
+            <% }); %>
+          </div>
+
+          <div class="order-summary mt-3">
+            <div>
+              <div class="summary-label">Actions</div>
+              <a class="btn btn-outline-pink btn-sm" href="/orders/<%= order.id %>/invoice">View Invoice</a>
+            </div>
+            <div class="ms-auto d-flex flex-wrap gap-3">
+              <div>
+                <div class="summary-label">Subtotal</div>
+                <div class="summary-value">$<%= orderSubtotal.toFixed(2) %></div>
+              </div>
+              <div>
+                <div class="summary-label">GST (9%)</div>
+                <div class="summary-value">$<%= gstAmount.toFixed(2) %></div>
+              </div>
+              <div>
+                <div class="summary-label">Grand Total</div>
+                <div class="summary-total">$<%= orderTotal.toFixed(2) %></div>
+              </div>
+            </div>
+          </div>
         </div>
       <% }); %>
+        </div>
+        <aside class="order-sidebar" id="orderSidebar">
+          <h5 class="mb-3">Order Overview</h5>
+          <div class="sidebar-item">
+            <div class="sidebar-label">Invoice</div>
+            <div class="sidebar-value" data-field="invoice">Select an order</div>
+          </div>
+          <div class="sidebar-item">
+            <div class="sidebar-label">Status</div>
+            <div class="sidebar-value" data-field="status">—</div>
+          </div>
+          <div class="sidebar-item">
+            <div class="sidebar-label">Subtotal</div>
+            <div class="sidebar-value" data-field="subtotal">$0.00</div>
+          </div>
+          <div class="sidebar-item">
+            <div class="sidebar-label">GST (9%)</div>
+            <div class="sidebar-value" data-field="gst">$0.00</div>
+          </div>
+          <div class="sidebar-item">
+            <div class="sidebar-label">Grand Total</div>
+            <div class="sidebar-value" data-field="total">$0.00</div>
+          </div>
+          <a class="btn btn-outline-pink btn-sm w-100" data-field="link" href="#" target="_blank">View Invoice</a>
+        </aside>
+      </div>
     <% } %>
   </main>
 
   <%- include('partials/footer') %>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function () {
+      const sidebar = document.getElementById('orderSidebar');
+      if (!sidebar) return;
+
+      const fields = {
+        invoice: sidebar.querySelector('[data-field="invoice"]'),
+        status: sidebar.querySelector('[data-field="status"]'),
+        subtotal: sidebar.querySelector('[data-field="subtotal"]'),
+        gst: sidebar.querySelector('[data-field="gst"]'),
+        total: sidebar.querySelector('[data-field="total"]'),
+        link: sidebar.querySelector('[data-field="link"]')
+      };
+
+      function updateSidebar(card) {
+        if (!card) return;
+        fields.invoice.textContent = card.dataset.invoice || '—';
+        fields.status.textContent = card.dataset.status || 'Pending Order';
+        fields.subtotal.textContent = '$' + (card.dataset.subtotal || '0.00');
+        fields.gst.textContent = '$' + (card.dataset.gst || '0.00');
+        fields.total.textContent = '$' + (card.dataset.total || '0.00');
+        if (fields.link) {
+          fields.link.href = card.dataset.link || '#';
+        }
+      }
+
+      const cards = document.querySelectorAll('.order-card');
+      cards.forEach((card) => {
+        card.addEventListener('mouseenter', () => updateSidebar(card));
+        card.addEventListener('focusin', () => updateSidebar(card));
+      });
+      if (cards.length) {
+        updateSidebar(cards[0]);
+      }
+    })();
+  </script>
 </body>
 </html>

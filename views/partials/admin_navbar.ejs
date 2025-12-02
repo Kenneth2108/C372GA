@@ -1,0 +1,56 @@
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="/admin">🐾 FluffyFriend</a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav"
+            aria-controls="adminNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse justify-content-end" id="adminNav">
+      <ul class="navbar-nav align-items-lg-center gap-lg-2">
+        <li class="nav-item">
+          <a class="nav-link" href="/admin">Dashboard</a>
+        </li>
+
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="adminUsersMenu" role="button"
+             data-bs-toggle="dropdown" aria-expanded="false">
+            Users
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminUsersMenu">
+            <li>
+              <a class="dropdown-item" href="/admin/users">Users Main Page</a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="/admin/users/new">Add Users</a>
+            </li>
+          </ul>
+        </li>
+
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="adminProductsMenu" role="button"
+             data-bs-toggle="dropdown" aria-expanded="false">
+            Products
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminProductsMenu">
+            <li>
+              <a class="dropdown-item" href="/admin/products">Product Main Page</a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="/admin/products/new">Add Products</a>
+            </li>
+          </ul>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="/admin/orders">Orders</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="/logout">Logout</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

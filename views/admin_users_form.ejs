@@ -19,20 +19,14 @@
 </head>
 <body>
   <!-- Navbar. -->
-  <nav class="navbar">
-    <div class="container d-flex justify-content-between">
-      <a class="navbar-brand" href="/">🐾 FluffyFriend</a>
-      <div>
-        <a class="nav-link d-inline" href="/admin/users">Back to Users</a>
-        <a class="nav-link d-inline" href="/logout">Logout</a>
-      </div>
-    </div>
-  </nav>
+  <%- include('partials/admin_navbar') %>
 
   <main class="container my-4" style="max-width:720px;">
     <% if (error && error.length) { %>
       <div class="alert alert-danger"><%= error[0] %></div>
     <% } %>
+
+    <% const canAssignPrivileged = user && user.role === 'master'; %>
 
     <div class="card card-soft p-4">
       <h4 class="mb-3"><%= (mode==='edit'?'Edit User':'Create New User') %></h4>
@@ -83,13 +77,7 @@
           <input class="form-control" name="contact" required value="<%= form.contact %>">
         </div>
 
-        <div class="mb-3">
-          <label class="form-label">Role</label>
-          <select class="form-select" name="role" required>
-            <option value="user"  <%= form.role==='user' ? 'selected' : '' %>>user</option>
-            <option value="admin" <%= form.role==='admin'? 'selected' : '' %>>admin</option>
-          </select>
-        </div>
+        <input type="hidden" name="role" value="<%= form.role || 'user' %>">
 
         <div class="d-flex gap-2">
           <button class="btn btn-pink text-white" type="submit"><%= (mode==='edit'?'Update':'Create') %></button>
