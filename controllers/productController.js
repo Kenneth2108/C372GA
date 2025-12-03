@@ -165,5 +165,23 @@ exports.showStore = function (req, res) {
     });
   });
 };
+// jiaxuan start
+// Admin: delete a product
+exports.deleteProduct = function (req, res) {
+  const id = req.params.id;
+
+  Product.deleteProduct(id, function (err) {
+    if (err) {
+      console.error('Error deleting product:', err);
+      req.flash('error', 'Failed to delete product.');
+      return res.redirect('/admin/products');
+    }
+
+    req.flash('success', 'Product deleted successfully.');
+    res.redirect('/admin/products');
+  });
+};
+// jiaxuan end
+
 //Isaac end
 

@@ -106,6 +106,11 @@ app.post('/admin/products', checkAuthenticated, checkAdmin, upload.single('image
 app.get('/admin/products/:id/edit', checkAuthenticated, checkAdmin, productCtrl.getProductById); // render admin/product-edit.ejs
 app.post('/admin/products/:id/edit', checkAuthenticated, checkAdmin, upload.single('image'), productCtrl.updateProduct);
 
+// jiaxuan start
+// Admin: delete product
+app.get('/admin/products/:id/delete', checkAuthenticated, checkAdmin, productCtrl.deleteProduct);
+// jiaxuan end
+
 // Add to cart from UserProducts without going to /cart
 app.post('/UserProducts/add/:id', checkAuthenticated, checkUser, CartItemsController.addFromUserProducts);
 //(Isaac End )

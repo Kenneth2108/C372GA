@@ -103,10 +103,24 @@
                   <td class="text-end">$<%= Number(p.price).toFixed(2) %></td>
                   <td class="text-end"><%= p.quantity %></td>
 
-                  <td class="text-end">
-                    <a href="/admin/products/<%= p.id %>/edit"
-                       class="btn btn-sm btn-outline-secondary no-row-nav">Edit</a>
-                  </td>
+                  
+                    <td class="text-end">
+
+  <!-- jiaxuan start -->
+  <a href="/admin/products/<%= p.id %>/edit"
+     class="btn btn-sm btn-outline-secondary no-row-nav me-1">
+     Edit
+  </a>
+
+  <a href="/admin/products/<%= p.id %>/delete"
+     class="btn btn-sm btn-outline-danger no-row-nav"
+     onclick="return confirm('Are you sure you want to delete this product?');">
+     Delete
+  </a>
+  <!-- jiaxuan end -->
+
+</td>
+
 
                 </tr>
               <% }); %>
