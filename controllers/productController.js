@@ -3,7 +3,11 @@
 const Product = require('../models/productModel');
 
 // Admin: list all products
+// Admin: list all products
 exports.getAllProducts = function (req, res) {
+  // Read stock filter from query string (e.g. ?stockFilter=out)
+  var stockFilter = req.query.stockFilter || '';
+
   Product.getAllProducts(function (err, products) {
     if (err) {
       console.error('Error fetching products:', err);
@@ -11,8 +15,29 @@ exports.getAllProducts = function (req, res) {
       return res.redirect('/admin');
     }
 
+    // Apply stock filtering in JS
+    var filteredProducts = products;
+
+    if (stockFilter === 'out') {
+      // Out of stock: qty <= 0
+      filteredProducts = products.filter(function (p) {
+        return Number(p.quantity) <= 0;
+      });
+    } else if (stockFilter === 'low') {
+      // Low stock: 1–5
+      filteredProducts = products.filter(function (p) {
+        var qty = Number(p.quantity);
+        return qty > 0 && qty <= 5;
+      });
+    } else if (stockFilter === 'in') {
+      filteredProducts = products.filter(function (p) {
+        return Number(p.quantity) > 0;  
+      });
+    }
+
     res.render('admin/products', {
-      products: products,
+      products: filteredProducts,
+      stockFilter: stockFilter,       
       success: req.flash('success'),
       error: req.flash('error')
     });

@@ -319,6 +319,7 @@
     }
     .btn-add-cart {
       background:#ff6fa3;
+      text-decoration: none !important;
     }
     .btn-add-cart:hover {
       background:#ff8db8;
@@ -328,6 +329,31 @@
     }
     .btn-buy-now:hover {
       background:#ff6fa3;
+    }
+    /* Stock level badges on shop page */
+    .stock-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .stock-ok {
+      background: #e6f9ed;
+      color: #1e7e34;
+    }
+
+    .stock-low {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .stock-out {
+      background: #fde2e4;
+      color: #c82333;
     }
   </style>
 </head>
@@ -513,46 +539,86 @@
                   <%= p.description ? p.description : (p.category || '') %>
                 </div>
 
-                <!-- PRICE + Quantity -->
-                <div class="price-row">
+                <!-- Stock Level -->
+                <%
+                  const qty = Number(p.quantity) || 0;
+                  let badgeClass = '';
+                  let badgeText  = '';
+
+                  if (qty <= 0) {
+                    badgeClass = 'stock-out';
+                    badgeText  = 'Out of stock';
+                  } else if (qty <= 5) {
+                    badgeClass = 'stock-low';
+                    badgeText  = 'Low stock';
+                  } else {
+                    badgeClass = 'stock-ok';
+                    badgeText  = 'In stock';
+                  }
+                %>
+
+                <!-- PRICE + Stock badge -->
+                <div class="price-row d-flex justify-content-between align-items-center">
                   <span class="price">$<%= Number(p.price).toFixed(2) %></span>
-                  <div class="text-muted small mt-1">
-                    In stock: <strong><%= p.quantity %></strong>
-                  </div>
+                  <span class="stock-badge <%= badgeClass %>">
+                    <%= badgeText %><% if (qty > 0) { %> (<%= qty %>)<% } %>
+                  </span>
                 </div>
 
-                <!-- QUANTITY SELECTOR + ADD TO CART -->
-                <div class="text-center mt-2">
-                  <form
-                    action="/UserProducts/add/<%= p.id %>"
-                    method="POST"
-                    class="d-flex justify-content-center align-items-center gap-2"
-                  >
-                    <input
+                <!-- SHOP BUTTONS -->
+                <% if (qty <= 0) { %>
+                  <!-- OUT OF STOCK -->
+                  <div class="text-center mt-2">
+                    <button type="button" class="btn-shop btn-add-cart" disabled style="opacity:.6; cursor:not-allowed;">
+                      Out of stock
+                    </button>
+                  </div>
+                <% } else { %>
+                  <!-- QTY ON ITS OWN ROW -->
+                  <div class="d-flex justify-content-center mt-2">
+                    <input 
                       type="number"
-                      name="quantity"
+                      id="qtyInput-<%= p.id %>"
+                      class="qty-input"
                       min="1"
                       max="<%= p.quantity %>"
                       value="1"
-                      class="qty-input"
+                      style="width:65px; text-align:center;"
                     />
+                  </div>
 
-                    <button type="submit" class="btn-shop btn-add-cart">
-                      Add to Cart
-                    </button>
-                  </form>
-                </div>
+                  <!-- BUTTONS SIDE BY SIDE -->
+                  <div class="d-flex justify-content-between align-items-center mt-2 gap-2">
 
-                <!-- BUY NOW (default quantity 1) -->
-                <form action="/add-to-cart/<%= p.id %>" method="POST" class="text-center mt-2">
-                  <input type="hidden" name="quantity" value="1">
-                  <button
-                    type="submit"
-                    class="btn-shop btn-buy-now"
-                    <%= p.quantity < 1 ? 'disabled' : '' %>>
-                    Buy Now
-                  </button>
-                </form>
+                    <!-- ADD TO CART -->
+                    <form action="/UserProducts/add/<%= p.id %>" method="POST" class="m-0 flex-grow-1">
+                      <input type="hidden" name="quantity" id="addQty-<%= p.id %>" value="1">
+                      <button type="submit" class="btn-shop btn-add-cart w-100">
+                        Add to Cart
+                      </button>
+                    </form>
+
+                    <!-- BUY NOW -->
+                    <form action="/cart/add" method="POST" class="m-0 flex-grow-1">
+                      <input type="hidden" name="productId" value="<%= p.id %>">
+                      <input type="hidden" name="quantity" id="buyQty-<%= p.id %>" value="1">
+                      <button type="submit" class="btn-shop btn-buy-now w-100">
+                        Buy Now
+                      </button>
+                    </form>
+                  </div>
+
+                  <!-- SYNC SCRIPT -->
+                  <script>
+                    document.getElementById('qtyInput-<%= p.id %>').addEventListener('input', function () {
+                      const v = Number(this.value);
+                      if (v > 0) {
+                        document.getElementById('addQty-<%= p.id %>').value = v;
+                        document.getElementById('buyQty-<%= p.id %>').value = v;
+                      }
+                    });
+                  </script>
+                <% } %>
               </div>
             </div>
           <% }); %>

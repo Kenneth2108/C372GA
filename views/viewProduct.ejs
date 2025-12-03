@@ -71,6 +71,53 @@
       transform: translateY(0);
       box-shadow: 0 3px 8px rgba(255, 111, 163, 0.3);
     }
+
+    .flash-wrapper {
+      max-width:900px;
+      margin:16px auto 0;
+    }
+
+    .qty-input {
+      width:80px;
+      padding:6px;
+      border-radius:10px;
+      border:2px solid #ffaad1;
+      font-size:0.95rem;
+      text-align:center;
+      font-weight:600;
+      background:#fff;
+      transition:0.25s ease;
+    }
+    .qty-input:focus {
+      outline:none;
+      border-color:#ff6fa3;
+      box-shadow:0 0 6px rgba(255,111,163,0.4);
+    }
+
+    .btn-shop {
+      border:none;
+      border-radius:999px;
+      padding:8px 18px;
+      font-size:0.9rem;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow:0 3px 8px rgba(0,0,0,0.18);
+      transition:0.2s ease;
+      color:#fff;
+      white-space:nowrap;
+    }
+    .btn-add-cart {
+      background:#ff6fa3;
+    }
+    .btn-add-cart:hover {
+      background:#ff8db8;
+    }
+    .btn-buy-now {
+      background:#ff4c93;
+    }
+    .btn-buy-now:hover {
+      background:#ff6fa3;
+    }
   </style>
 </head>
 
@@ -80,6 +127,21 @@
   <%- include('partials/user_navbar') %>
 
   <main>
+    <%
+      const selCategory = (typeof selectedCategory !== 'undefined' ? selectedCategory : '');
+      const q = (typeof query !== 'undefined' ? query : '');
+    %>
+
+    <!-- Flash messages -->
+    <div class="flash-wrapper">
+      <% if (success && success.length) { %>
+        <div class="alert alert-success py-2"><%= success[0] %></div>
+      <% } %>
+      <% if (error && error.length) { %>
+        <div class="alert alert-danger py-2"><%= error[0] %></div>
+      <% } %>
+    </div>
+
     <div class="container py-5">
 
       <!-- Back button -->
@@ -119,6 +181,62 @@
             <p class="mb-0"><%= desc %></p>
           </div>
         </div>
+      </div>
+
+      <% const isOutOfStock = Number(product.quantity) <= 0; %>
+
+      <div class="mt-4">
+        <% if (isOutOfStock) { %>
+          <div class="alert alert-warning">
+            This product is currently out of stock and cannot be purchased.
+          </div>
+        <% } else { %>
+
+          <!-- Quantity Selector -->
+          <div class="mb-3">
+            <label for="qtyInput" class="fw-bold">Quantity:</label>
+            <input
+              type="number"
+              id="qtyInput"
+              name="quantity"
+              value="1"
+              min="1"
+              max="<%= product.quantity %>"
+              class="qty-input"
+            />
+          </div>
+
+          <!-- SIDE-BY-SIDE BUTTONS -->
+          <div class="d-flex gap-3">
+
+            <!-- Add to Cart -->
+            <form action="/UserProducts/add/<%= product.id %>" method="POST">
+              <input type="hidden" id="addToCartQty" name="quantity" value="1">
+              <button type="submit" class="btn-shop btn-add-cart">Add to Cart</button>
+            </form>
+
+            <!-- Buy Now -->
+            <form action="/cart/add" method="POST">
+              <input type="hidden" name="productId" value="<%= product.id %>">
+              <input type="hidden" id="buyNowQty" name="quantity" value="1">
+              <button type="submit" class="btn-shop btn-buy-now">Buy Now</button>
+            </form>
+
+          </div>
+
+          <script>
+            // Sync quantity for BOTH forms
+            const qty = document.getElementById('qtyInput');
+            const buyNowQty = document.getElementById('buyNowQty');
+            const addQty = document.getElementById('addToCartQty');
+
+            qty.addEventListener('input', function () {
+              buyNowQty.value = qty.value;
+              addQty.value = qty.value;
+            });
+          </script>
+
+        <% } %>
       </div>
     </div>
   </main>

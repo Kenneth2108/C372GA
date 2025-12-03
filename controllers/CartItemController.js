@@ -61,7 +61,7 @@ const CartItemsController = {
 
             // ❌ Out of stock
             if (availableStock <= 0) {
-                req.flash('error', 'This product is out of stock.');
+                req.flash('error', 'This product is out of stock and cannot be purchased.');
                 return res.redirect(backUrl);
             }
 
