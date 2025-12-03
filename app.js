@@ -25,10 +25,10 @@ const {
   blockAdminFromUserPages,
   upload
 } = require('./middleware');
-//(Kenneth End)
-
 // Register common middleware (views, static, session, flash)
 registerMiddleware(app);
+//(Kenneth End)
+
 
 //(Thrish Start)
 const CartItemsController = require('./controllers/CartItemController');
