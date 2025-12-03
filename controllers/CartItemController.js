@@ -40,56 +40,62 @@ const CartItemsController = {
         const productId = parseInt(idFromBody || req.params.id, 10);
         if (isNaN(productId)) {
             req.flash('error', 'Invalid product id');
-            return res.redirect('/shopping');
+            return res.redirect('/UserProducts');
         }
 
         const qty = parseInt(req.body.quantity, 10) || 1;
 
-        // 🔥 NEW: Get product price
+        // Helper: go back to where user came from, or to /UserProducts
+        const backUrl = req.get('referer') || '/UserProducts';
+
+        // Get product price + stock
         const priceSql = "SELECT price, quantity AS stock FROM products WHERE id = ?";
         db.query(priceSql, [productId], (err, rows) => {
             if (err || rows.length === 0) {
                 req.flash('error', 'Product not found');
-                return res.redirect('/shopping');
+                return res.redirect(backUrl);
             }
 
             const productPrice = rows[0].price;
-
             const availableStock = Number(rows[0].stock) || 0;
+
+            // ❌ Out of stock
             if (availableStock <= 0) {
                 req.flash('error', 'This product is out of stock.');
-                return res.redirect('/shopping');
+                return res.redirect(backUrl);
             }
 
+            // Check if already in cart to not exceed stock
             const existingSql = "SELECT quantity FROM cart_items WHERE user_id = ? AND product_id = ?";
             db.query(existingSql, [userId, productId], (cartErr, cartRows) => {
                 if (cartErr) {
                     console.error('Cart stock check error:', cartErr);
                     req.flash('error', 'Could not verify stock.');
-                    return res.redirect('/shopping');
+                    return res.redirect(backUrl);
                 }
 
                 const currentQty = cartRows.length ? Number(cartRows[0].quantity) : 0;
                 if (currentQty + qty > availableStock) {
                     req.flash('error', 'Not enough stock available for this product.');
-                    return res.redirect('/shopping');
+                    return res.redirect(backUrl);
                 }
 
-                // Now add item to cart WITH price
+                // Add item to cart WITH price
                 CartItems.add(userId, productId, qty, productPrice, (addErr) => {
                     if (addErr) {
                         console.error('Cart add error:', addErr);
                         req.flash('error', 'Could not add item to cart');
-                        return res.redirect('/shopping');
+                        return res.redirect(backUrl);
                     }
 
                     req.flash('success', 'Item added to cart');
+
+                    // For "Buy Now" we still go to cart
                     return res.redirect('/cart');
                 });
             });
         });
     },
-
 
     updateQuantity(req, res) {
         const userId = (req.session.user && (req.session.user.userId || req.session.user.id));
