@@ -90,6 +90,66 @@ const CartItemsController = {
         });
     },
 
+
+    updateQuantity(req, res) {
+        const userId = (req.session.user && (req.session.user.userId || req.session.user.id));
+        if (!userId) {
+            req.flash('error', 'Please log in');
+            return res.redirect('/login');
+        }
+
+        const idFromBody = req.body.fineId || req.body.productId || req.body.fine_id || req.body.product_id;
+        const productId = parseInt(idFromBody || req.params.id, 10);
+        if (isNaN(productId)) {
+            req.flash('error', 'Invalid product id');
+            return res.redirect('/cart');
+        }
+
+        let desiredQty = parseInt(req.body.quantity, 10);
+        if (isNaN(desiredQty)) desiredQty = 1;
+
+        if (desiredQty <= 0) {
+            return CartItems.remove(userId, productId, (removeErr) => {
+                if (removeErr) {
+                    console.error('Cart remove (qty<=0) error:', removeErr);
+                    req.flash('error', 'Could not update quantity');
+                } else {
+                    req.flash('success', 'Item removed from cart');
+                }
+                res.redirect('/cart');
+            });
+        }
+
+        const stockSql = 'SELECT quantity AS stock FROM products WHERE id = ?';
+        db.query(stockSql, [productId], (err, rows) => {
+            if (err || !rows || rows.length === 0) {
+                console.error('Cart update stock error:', err);
+                req.flash('error', 'Product not found');
+                return res.redirect('/cart');
+            }
+
+            const availableStock = Number(rows[0].stock) || 0;
+            if (availableStock === 0) {
+                req.flash('error', 'This product is out of stock.');
+                return res.redirect('/cart');
+            }
+            if (desiredQty > availableStock) {
+                req.flash('error', `Only ${availableStock} item(s) available.`);
+                return res.redirect('/cart');
+            }
+
+            CartItems.updateQuantity(userId, productId, desiredQty, (updateErr) => {
+                if (updateErr) {
+                    console.error('Cart quantity update error:', updateErr);
+                    req.flash('error', 'Could not update quantity');
+                } else {
+                    req.flash('success', 'Quantity updated');
+                }
+                res.redirect('/cart');
+            });
+        });
+    },
+
     remove(req, res) {
         const userId = (req.session.user && (req.session.user.userId || req.session.user.id));
         if (!userId) {

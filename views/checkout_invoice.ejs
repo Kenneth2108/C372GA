@@ -5,6 +5,9 @@
   <title>Checkout Invoice</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
+    :root {
+      color-scheme: light;
+    }
     /* Pink Navbar (shared styling for partial) */
     .navbar {
       background: linear-gradient(90deg, #ff8db8, #ff6fa3);
@@ -25,7 +28,7 @@
       height: 100%;
     }
     body {
-      background: #fff6fb;
+      background: linear-gradient(180deg, #fff6fb 0%, #ffecf5 100%);
       font-family: 'Segoe UI', sans-serif;
       min-height: 100vh;
       display: flex;
@@ -36,14 +39,16 @@
       display: flex;
       align-items: flex-start;
       justify-content: center;
-      padding-bottom: 40px;
+      padding: 40px 0 80px;
+      width: 100%;
     }
     .invoice-card {
       background: #fff;
-      border-radius: 18px;
-      box-shadow: 0 25px 60px rgba(255, 111, 163, 0.25);
-      padding: 32px;
+      border-radius: 24px;
+      box-shadow: 0 25px 60px rgba(255, 111, 163, 0.2);
+      padding: 40px;
       margin-top: 40px;
+      border: 1px solid #ffe1ee;
     }
     .invoice-header span {
       display: inline-block;
@@ -56,6 +61,7 @@
       border-radius: 16px;
       background: #fff6fb;
       padding: 18px;
+      border: 1px solid #ffe1ee;
     }
     .summary-box h5 {
       font-weight: 700;
@@ -86,7 +92,7 @@
 
 <body>
 
-  <!-- ✅ USER NAV PARTIAL -->
+  <!-- âœ… USER NAV PARTIAL -->
   <%- include('partials/user_navbar', { active: '' }) %>
 
   <main class="ff-main w-100">

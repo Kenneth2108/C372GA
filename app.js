@@ -22,6 +22,7 @@ const {
   checkAuthenticated,
   checkAdmin,
   checkUser,
+  blockAdminFromUserPages,
   upload
 } = require('./middleware');
 //(Kenneth End)
@@ -34,8 +35,8 @@ const CartItemsController = require('./controllers/CartItemController');
 //(Thrish End)
 
 /* ---------- Checkout ---------- */
-app.post('/checkout', checkAuthenticated, checkoutCtrl.generateInvoice);
-app.get('/invoice', checkAuthenticated, checkoutCtrl.showInvoice);
+app.post('/checkout', checkAuthenticated, checkUser, checkoutCtrl.generateInvoice);
+app.get('/invoice', checkAuthenticated, checkUser, checkoutCtrl.showInvoice);
 app.get('/orders', checkAuthenticated, checkUser, orderCtrl.listUserOrders);
 app.get('/orders/:id/invoice', checkAuthenticated, checkUser, orderCtrl.showUserInvoice);
 
@@ -95,30 +96,31 @@ app.post('/admin/orders/:id/edit', checkAuthenticated, checkAdmin, orderCtrl.upd
 
 //(Isaac Start )
 /* ---------- Storefront: all products (public) ---------- */
-app.get('/UserProducts', productCtrl.showStore);
+app.get('/UserProducts', blockAdminFromUserPages, productCtrl.showStore);
 
 /* ---------- Admin: Products CRU ---------- */
 app.get('/admin/products', checkAuthenticated, checkAdmin, productCtrl.getAllProducts); // render admin/products.ejs
-app.get('/viewproduct/:id', productCtrl.showProductDetails); // View single product (front-end)
+app.get('/viewproduct/:id', blockAdminFromUserPages, productCtrl.showProductDetails); // View single product (front-end)
 app.get('/admin/products/new', checkAuthenticated, checkAdmin, productCtrl.newProductForm); // render admin/product-add.ejs
 app.post('/admin/products', checkAuthenticated, checkAdmin, upload.single('image'), productCtrl.addProduct);
 app.get('/admin/products/:id/edit', checkAuthenticated, checkAdmin, productCtrl.getProductById); // render admin/product-edit.ejs
 app.post('/admin/products/:id/edit', checkAuthenticated, checkAdmin, upload.single('image'), productCtrl.updateProduct);
 
 // Add to cart from UserProducts without going to /cart
-app.post('/UserProducts/add/:id',checkAuthenticated,CartItemsController.addFromUserProducts);
+app.post('/UserProducts/add/:id', checkAuthenticated, checkUser, CartItemsController.addFromUserProducts);
 //(Isaac End )
 
 
 //(Thrish Start)
 /* ---------- Cart routes ---------- */
-app.get('/cart', checkAuthenticated, CartItemsController.list);
-app.post('/cart/add', checkAuthenticated, CartItemsController.add);
-app.post('/cart/remove', checkAuthenticated, CartItemsController.remove);
-app.post('/cart/clear', checkAuthenticated, CartItemsController.clear);
+app.get('/cart', checkAuthenticated, checkUser, CartItemsController.list);
+app.post('/cart/add', checkAuthenticated, checkUser, CartItemsController.add);
+app.post('/cart/remove', checkAuthenticated, checkUser, CartItemsController.remove);
+app.post('/cart/update', checkAuthenticated, checkUser, CartItemsController.updateQuantity);
+app.post('/cart/clear', checkAuthenticated, checkUser, CartItemsController.clear);
 
 // Compatibility route: allow legacy forms that POST to /add-to-cart/:id
-app.post('/add-to-cart/:id', checkAuthenticated, (req, res, next) => {
+app.post('/add-to-cart/:id', checkAuthenticated, checkUser, (req, res, next) => {
     // support different field names: fineId, productId or params.id
     req.body.fineId = req.body.fineId || req.body.productId || req.params.id;
     return CartItemsController.add(req, res, next);

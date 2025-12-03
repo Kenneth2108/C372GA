@@ -61,12 +61,24 @@ const checkUser = (req, res, next) => {
   return res.redirect('/login');
 };
 
+const blockAdminFromUserPages = (req, res, next) => {
+  if (req.session.user) {
+    const role = req.session.user.role;
+    if (role === 'admin' || role === 'master') {
+      req.flash('error', 'Admin and master accounts cannot access user pages.');
+      return res.redirect('/admin');
+    }
+  }
+  return next();
+};
+
 module.exports = {
   registerMiddleware,
   checkAuthenticated,
   checkAdmin,
   checkMaster,
   checkUser,
+  blockAdminFromUserPages,
   upload
 };
 //Kenneth End

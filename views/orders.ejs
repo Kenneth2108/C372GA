@@ -273,22 +273,8 @@
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg">
-    <div class="container">
-      <a class="navbar-brand" href="/">&#128062; FluffyFriend</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ordersNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="ordersNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="/UserProducts">Products</a></li>
-          <li class="nav-item"><a class="nav-link" href="/cart">Cart</a></li>
-          <li class="nav-item"><a class="nav-link active" href="/orders">My Orders</a></li>
-          <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+  <!-- Shared user navbar -->
+  <%- include('partials/user_navbar') %>
 
   <main class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
