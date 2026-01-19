@@ -377,7 +377,7 @@
 
   <% const totalOrders = (orders && orders.length) || 0;
      const pendingOrders = (orders || []).filter(function(ord){
-       return (ord.status || 'Pending Order') === 'Pending Order';
+       return (ord.status || 'On Hold') === 'On Hold';
      }).length;
      const totalRevenue = (orders || []).reduce(function(sum, ord){
        return sum + Number(ord.total || 0);
@@ -392,7 +392,7 @@
     </div>
 
     <div class="stat-card">
-      <small>Pending Orders</small>
+      <small>On Hold Orders</small>
       <p class="stat-value mb-1"><%= pendingOrders %></p>
       <p class="stat-note mb-0">Waiting for fulfillment</p>
     </div>
@@ -446,11 +446,11 @@
 
                const orderTotal = (typeof order.total === 'number' ? Number(order.total) : orderSubtotal + gstAmount);
 
-               const statusSteps = orderStatuses || ['Pending Order', 'Preparing Order', 'Out for Delivery', 'Completed'];
+               const statusSteps = orderStatuses || ['On Hold', 'In Process', 'Shipped', 'Delivered'];
                const statusIcons = ['📦','🛠️','🚚','✅'];
-               const statusSubtext = ['Order submitted','Packing items','On the way','Delivered'];
+               const statusSubtext = ['Order received','Preparing order','Sent to carrier','Delivered'];
 
-               const currentStatus = (order.status || 'Pending Order');
+               const currentStatus = (order.status || 'On Hold');
                const activeIndex = statusSteps.indexOf(currentStatus) >= 0 ? statusSteps.indexOf(currentStatus) : 0;
           %>
 
@@ -465,7 +465,8 @@
                  data-gst="<%= gstAmount.toFixed(2) %>"
                  data-total="<%= orderTotal.toFixed(2) %>"
                  data-link="/admin/orders/<%= order.id %>/invoice"
-                 data-edit-link="/admin/orders/<%= order.id %>/edit">
+                 data-edit-link="/admin/orders/<%= order.id %>/edit"
+                 data-refund-link="/admin/orders/<%= order.id %>/refund">
 
               <div class="order-header d-flex flex-wrap justify-content-between align-items-center">
                 <div>
@@ -519,8 +520,11 @@
               <div class="order-summary mt-3">
                 <div class="d-flex flex-column gap-2">
                   <div class="label">Actions</div>
-                  <a class="btn btn-sm btn-outline-pink" href="/admin/orders/<%= order.id %>/invoice">View Invoice</a>
-                  <a class="btn btn-sm btn-outline-pink" href="/admin/orders/<%= order.id %>/edit">Edit Status</a>
+                  <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-sm btn-outline-pink" href="/admin/orders/<%= order.id %>/invoice">View Invoice</a>
+                    <a class="btn btn-sm btn-outline-pink" href="/admin/orders/<%= order.id %>/edit">Edit Status</a>
+                    <a class="btn btn-sm btn-outline-pink" href="/admin/orders/<%= order.id %>/refund">Refund</a>
+                  </div>
                 </div>
 
                 <div class="order-totals">
@@ -570,8 +574,9 @@
           </div>
           <div class="sidebar-divider"></div>
           <div class="sidebar-cta">
-            <a class="btn btn-outline-pink btn-sm w-100" data-field="link" href="#" target="_blank">View Invoice</a>
-            <a class="btn btn-outline-pink btn-sm w-100" data-field="edit-link" href="#" target="_blank">Edit Status</a>
+            <a class="btn btn-outline-pink btn-sm w-100" data-field="link" href="#">View Invoice</a>
+            <a class="btn btn-outline-pink btn-sm w-100" data-field="edit-link" href="#">Edit Status</a>
+            <a class="btn btn-outline-pink btn-sm w-100" data-field="refund-link" href="#">Refund</a>
           </div>
         </aside>
       </div>
@@ -630,7 +635,8 @@
       gst:      sidebar.querySelector('[data-field="gst"]'),
       total:    sidebar.querySelector('[data-field="total"]'),
       link:     sidebar.querySelector('[data-field="link"]'),
-      editLink: sidebar.querySelector('[data-field="edit-link"]')
+      editLink: sidebar.querySelector('[data-field="edit-link"]'),
+      refundLink: sidebar.querySelector('[data-field="refund-link"]')
     };
 
     function updateSidebar(card) {
@@ -639,7 +645,7 @@
         fields.customer.textContent = card.dataset.customer || 'Customer';
       }
       fields.invoice.textContent  = card.dataset.invoice || '\u2014';
-      fields.status.textContent   = card.dataset.status  || 'Pending Order';
+      fields.status.textContent   = card.dataset.status  || 'On Hold';
       fields.subtotal.textContent = '$' + (card.dataset.subtotal || '0.00');
       fields.gst.textContent      = '$' + (card.dataset.gst      || '0.00');
       fields.total.textContent    = '$' + (card.dataset.total    || '0.00');
@@ -648,6 +654,9 @@
       }
       if (fields.editLink) {
         fields.editLink.href = card.dataset.editLink || '#';
+      }
+      if (fields.refundLink) {
+        fields.refundLink.href = card.dataset.refundLink || '#';
       }
     }
 

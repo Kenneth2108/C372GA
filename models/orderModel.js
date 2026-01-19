@@ -65,6 +65,8 @@ const Orders = {
   createOrder(orderData, items, callback) {
     const userId = orderData && (orderData.userId || orderData.user_id);
     const invoiceNumber = orderData && orderData.invoiceNumber ? String(orderData.invoiceNumber) : null;
+    const paypalOrderId = orderData && orderData.paypalOrderId ? String(orderData.paypalOrderId) : null;
+    const paypalCaptureId = orderData && orderData.paypalCaptureId ? String(orderData.paypalCaptureId) : null;
 
     const subtotal = (() => {
       if (orderData && orderData.subtotal != null) {
@@ -92,11 +94,14 @@ const Orders = {
       }
 
       const orderSql = `
-        INSERT INTO orders (user_id, subtotal, tax_amount, total, invoice_number, status, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, NOW())
+        INSERT INTO orders (user_id, subtotal, tax_amount, total, invoice_number, status, paypal_order_id, paypal_capture_id, carrier, shipment_date, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
       `;
 
-      db.query(orderSql, [userId, subtotal, taxAmount, total, invoiceNumber, 'Pending Order'], function (orderErr, result) {
+      db.query(
+        orderSql,
+        [userId, subtotal, taxAmount, total, invoiceNumber, 'On Hold', paypalOrderId, paypalCaptureId, null, null],
+        function (orderErr, result) {
         if (orderErr) {
           return db.rollback(function () {
             callback(orderErr);
@@ -139,6 +144,10 @@ const Orders = {
         o.tax_amount,
         o.total,
         o.status,
+        o.carrier,
+        o.shipment_date,
+        o.paypal_order_id,
+        o.paypal_capture_id,
         o.created_at,
         oi.id AS order_item_id,
         oi.product_id,
@@ -169,7 +178,11 @@ const Orders = {
             subtotal: row.subtotal != null ? Number(row.subtotal) : 0,
             taxAmount: row.tax_amount != null ? Number(row.tax_amount) : 0,
             total: row.total != null ? Number(row.total) : 0,
-            status: row.status || 'Pending Order',
+            status: row.status || 'On Hold',
+            carrier: row.carrier || null,
+            shipment_date: row.shipment_date || null,
+            paypal_order_id: row.paypal_order_id,
+            paypal_capture_id: row.paypal_capture_id,
             createdAt: row.created_at,
             items: []
           };
@@ -203,6 +216,10 @@ const Orders = {
         o.tax_amount,
         o.total,
         o.status,
+        o.carrier,
+        o.shipment_date,
+        o.paypal_order_id,
+        o.paypal_capture_id,
         o.created_at,
         u.username,
         u.email,
@@ -236,7 +253,11 @@ const Orders = {
             subtotal: row.subtotal != null ? Number(row.subtotal) : 0,
             taxAmount: row.tax_amount != null ? Number(row.tax_amount) : 0,
             total: row.total != null ? Number(row.total) : 0,
-            status: row.status || 'Pending Order',
+            status: row.status || 'On Hold',
+            carrier: row.carrier || null,
+            shipment_date: row.shipment_date || null,
+            paypal_order_id: row.paypal_order_id,
+            paypal_capture_id: row.paypal_capture_id,
             created_at: row.created_at,
             username: row.username,
             email: row.email,
@@ -276,6 +297,10 @@ const Orders = {
         o.tax_amount,
         o.total,
         o.status,
+        o.carrier,
+        o.shipment_date,
+        o.paypal_order_id,
+        o.paypal_capture_id,
         o.created_at,
         u.username,
         u.email,
@@ -308,7 +333,11 @@ const Orders = {
         taxAmount: rows[0].tax_amount != null ? Number(rows[0].tax_amount) : 0,
         total: rows[0].total != null ? Number(rows[0].total) : 0,
         created_at: rows[0].created_at,
-        status: rows[0].status || 'Pending Order',
+        status: rows[0].status || 'On Hold',
+        carrier: rows[0].carrier || null,
+        shipment_date: rows[0].shipment_date || null,
+        paypal_order_id: rows[0].paypal_order_id,
+        paypal_capture_id: rows[0].paypal_capture_id,
         username: rows[0].username,
         email: rows[0].email,
         items: []
@@ -331,12 +360,19 @@ const Orders = {
     });
   },
 
-  updateStatus(orderId, status, callback) {
+  updateStatus(orderId, status, carrier, shipmentDate, callback) {
     if (!orderId) {
       return callback(new Error('Order id is required to update status'));
     }
-    const sql = `UPDATE orders SET status = ? WHERE id = ?`;
-    db.query(sql, [status, orderId], callback);
+    const sql = `
+      UPDATE orders
+      SET
+        status = ?,
+        carrier = COALESCE(NULLIF(?, ''), carrier),
+        shipment_date = COALESCE(NULLIF(?, ''), shipment_date)
+      WHERE id = ?
+    `;
+    db.query(sql, [status, carrier || '', shipmentDate || '', orderId], callback);
   }
 };
 

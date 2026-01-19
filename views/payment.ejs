@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Checkout Payment</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+    }
+    body {
+      background: radial-gradient(circle at top, #ffe8f3 0%, #fff6fb 45%, #ffeef6 100%);
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .ff-main {
+      flex: 1 0 auto;
+      padding: 40px 0 80px;
+    }
+    .checkout-hero {
+      max-width: 680px;
+      margin: 0 auto 32px;
+    }
+    .checkout-hero .eyebrow-label {
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      color: #ff6fa3;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: inline-block;
+    }
+    .checkout-hero h1 {
+      font-weight: 700;
+      color: #312631;
+    }
+    .payment-card,
+    .summary-card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 25px 60px rgba(255, 111, 163, 0.18);
+      border: 1px solid #ffe1ee;
+    }
+    .payment-methods {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .method-card {
+      border-radius: 18px;
+      padding: 20px;
+      border: 1px solid #ffd7e8;
+      background: #fff7fb;
+    }
+    .method-card.muted {
+      background: #fff;
+      border-style: dashed;
+      opacity: 0.8;
+    }
+    .method-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .method-header h3 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #312631;
+    }
+    .pill {
+      background: #ff6fa3;
+      color: #fff;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      padding: 4px 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .pill.soon {
+      background: #ffbf47;
+      color: #472a00;
+    }
+    .summary-card h2,
+    .payment-card h2 {
+      font-weight: 700;
+      color: #312631;
+      margin-bottom: 1.25rem;
+    }
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid #f9ddeb;
+    }
+    .summary-item:last-child {
+      border-bottom: none;
+    }
+    .summary-item span {
+      color: #6b5566;
+      font-size: 0.95rem;
+    }
+    .summary-total {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px dashed #ffd7e8;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ff3d72;
+      display: flex;
+      justify-content: space-between;
+    }
+    .btn-outline-pink {
+      border: 1px solid #ff6fa3;
+      color: #ff6fa3;
+    }
+    .btn-outline-pink:hover {
+      background-color: #ff6fa3;
+      color: #fff;
+    }
+    #payment-status {
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <%- include('partials/user_navbar') %>
+
+  <main class="ff-main">
+    <div class="container">
+      <section class="checkout-hero text-center">
+        <span class="eyebrow-label">Secure checkout</span>
+        <h1>Choose Your Payment</h1>
+        <p class="text-muted mb-0">Pick a method to complete your fluffy order.</p>
+      </section>
+
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="payment-card">
+            <h2>Payment Methods</h2>
+            <div class="payment-methods">
+              <div class="method-card">
+                <div class="method-header">
+                  <h3>PayPal</h3>
+                  <span class="pill">Recommended</span>
+                </div>
+                <p class="text-muted mb-3">Pay quickly with your PayPal balance or card.</p>
+                <div id="paypal-button-container"></div>
+                <div id="payment-status" class="text-danger small" role="alert"></div>
+              </div>
+
+              <div class="method-card muted">
+                <div class="method-header">
+                  <h3>NETS</h3>
+                  <span class="pill soon">Soon</span>
+                </div>
+                <p class="text-muted mb-3">NETS integration is coming next.</p>
+                <button type="button" class="btn btn-outline-secondary" disabled>Coming soon</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="summary-card">
+            <h2>Order Summary</h2>
+            <% items.forEach(function(item) { %>
+              <div class="summary-item">
+                <span><%= item.productName %> x <%= item.quantity %></span>
+                <strong>$<%= item.lineTotal.toFixed(2) %></strong>
+              </div>
+            <% }) %>
+            <div class="summary-item">
+              <span>Subtotal</span>
+              <strong>$<%= summary.subtotal.toFixed(2) %></strong>
+            </div>
+            <div class="summary-item">
+              <span>GST (9%)</span>
+              <strong>$<%= summary.taxAmount.toFixed(2) %></strong>
+            </div>
+            <div class="summary-total">
+              <span>Total</span>
+              <span>$<%= summary.total.toFixed(2) %></span>
+            </div>
+            <a href="/cart" class="btn btn-outline-pink w-100 mt-4">Back to Cart</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <script src="https://www.paypal.com/sdk/js?client-id=<%= paypalClientId %>&currency=SGD"></script>
+  <script>
+    (function() {
+      var paypalClientId = '<%= paypalClientId %>';
+      var statusEl = document.getElementById('payment-status');
+
+      function setStatus(message) {
+        statusEl.textContent = message || '';
+      }
+
+      if (!paypalClientId || typeof paypal === 'undefined') {
+        setStatus('PayPal is not configured yet. Please update the client id.');
+        return;
+      }
+
+      paypal.Buttons({
+        createOrder: function() {
+          setStatus('');
+          return fetch('/checkout/paypal/create-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+          })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+              if (!data || !data.id) {
+                throw new Error(data && data.error ? data.error : 'Unable to create PayPal order.');
+              }
+              return data.id;
+            })
+            .catch(function(err) {
+              setStatus(err.message || 'Unable to start PayPal checkout.');
+              throw err;
+            });
+        },
+        onApprove: function(data) {
+          setStatus('Finalizing payment...');
+          return fetch('/checkout/paypal/capture', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ orderId: data.orderID })
+          })
+            .then(function(res) { return res.json(); })
+            .then(function(result) {
+              if (result && result.redirectUrl) {
+                window.location.href = result.redirectUrl;
+                return;
+              }
+              throw new Error(result && result.error ? result.error : 'Payment capture failed.');
+            })
+            .catch(function(err) {
+              setStatus(err.message || 'Payment capture failed.');
+            });
+        },
+        onError: function(err) {
+          setStatus('PayPal error: ' + (err && err.message ? err.message : 'Please try again.'));
+        }
+      }).render('#paypal-button-container');
+    })();
+  </script>
+</body>
+</html>

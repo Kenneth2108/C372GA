@@ -1,10 +1,11 @@
 const Orders = require('../models/orderModel');
+const orderTracking = require('./paypalTrackingController');
 
 const ORDER_STATUSES = [
-  'Pending Order',
-  'Preparing Order',
-  'Out for Delivery',
-  'Completed'
+  'On Hold',
+  'In Process',
+  'Shipped',
+  'Delivered'
 ];
 
 exports.listUserOrders = function (req, res) {
@@ -25,7 +26,7 @@ exports.listUserOrders = function (req, res) {
 
     const normalized = (orders || []).map((order) => ({
       ...order,
-      status: order.status || 'Pending Order',
+      status: order.status || 'On Hold',
       createdAt: order.createdAt ? new Date(order.createdAt) : null,
       items: order.items || []
     }));
@@ -206,20 +207,57 @@ exports.editOrderStatusForm = function (req, res) {
 exports.updateOrderStatus = function (req, res) {
   const orderId = parseInt(req.params.id, 10);
   const status = req.body.status;
+  const captureId = (req.body.captureId || '').trim();
+  const trackingNumber = (req.body.trackingNumber || '').trim();
+  const carrier = (req.body.carrier || '').trim();
+  const trackingNumberType = (req.body.trackingNumberType || '').trim();
+  const shipmentDate = (req.body.shipmentDate || '').trim();
+  const carrierNameOther = (req.body.carrierNameOther || '').trim();
+  const syncPaypal = (req.body.syncPaypal || '').toLowerCase() === 'true';
 
   if (isNaN(orderId) || !status || !ORDER_STATUSES.includes(status)) {
     req.flash('error', 'Invalid status update.');
     return res.redirect('/admin/orders');
   }
 
-  Orders.updateStatus(orderId, status, function (err) {
+  Orders.updateStatus(orderId, status, carrier, shipmentDate, function (err) {
     if (err) {
       console.error('Order status update error:', err);
       req.flash('error', 'Unable to update status.');
       return res.redirect('/admin/orders');
     }
 
-    req.flash('success', 'Order status updated.');
-    return res.redirect('/admin/orders');
+    if (!syncPaypal) {
+      req.flash('success', 'Order status updated.');
+      return res.redirect('/admin/orders');
+    }
+
+    orderTracking.sendTracking({
+      status,
+      captureId,
+      trackingNumber,
+      carrier,
+      trackingNumberType,
+      shipmentDate,
+      carrierNameOther
+    })
+      .then((result) => {
+        if (result.skipped) {
+          req.flash('success', 'Order status updated.');
+          return res.redirect('/admin/orders');
+        }
+        if (result.status < 200 || result.status >= 300) {
+          console.error('PayPal tracking response:', result.data);
+          req.flash('error', 'Order updated, but PayPal tracking failed.');
+          return res.redirect('/admin/orders');
+        }
+        req.flash('success', 'Order status updated and PayPal tracking sent.');
+        return res.redirect('/admin/orders');
+      })
+      .catch((trackErr) => {
+        console.error('PayPal tracking error:', trackErr);
+        req.flash('error', 'Order updated, but PayPal tracking failed.');
+        return res.redirect('/admin/orders');
+      });
   });
 };

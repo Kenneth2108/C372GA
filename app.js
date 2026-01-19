@@ -2,6 +2,10 @@
 const express = require('express');
 const userCtrl = require('./controllers/userController');
 const checkoutCtrl = require('./controllers/checkoutController');
+const paymentCtrl = require('./controllers/paymentController');
+const paypalRefundCtrl = require('./controllers/paypalRefundController');
+const adminRefundsCtrl = require('./controllers/adminRefundsController');
+const refundCtrl = require('./controllers/refundController');
 const orderCtrl = require('./controllers/orderController');
 const contactCtrl = require('./controllers/contactController');
 
@@ -34,11 +38,16 @@ registerMiddleware(app);
 const CartItemsController = require('./controllers/CartItemController');
 //(Thrish End)
 
+//(Kenneth Start 
 /* ---------- Checkout ---------- */
-app.post('/checkout', checkAuthenticated, checkUser, checkoutCtrl.generateInvoice);
+app.get('/checkout', checkAuthenticated, checkUser, paymentCtrl.showPaymentOptions);
+app.post('/checkout/paypal/create-order', checkAuthenticated, checkUser, paymentCtrl.createPaypalOrder);
+app.post('/checkout/paypal/capture', checkAuthenticated, checkUser, paymentCtrl.capturePaypalOrder);
 app.get('/invoice', checkAuthenticated, checkUser, checkoutCtrl.showInvoice);
 app.get('/orders', checkAuthenticated, checkUser, orderCtrl.listUserOrders);
 app.get('/orders/:id/invoice', checkAuthenticated, checkUser, orderCtrl.showUserInvoice);
+app.get('/refunds', checkAuthenticated, checkUser, refundCtrl.list);
+app.get('/refunds/:id', checkAuthenticated, checkUser, refundCtrl.details);
 
 /* ---------- Core pages ---------- */
 // Home
@@ -91,6 +100,10 @@ app.get('/admin/orders', checkAuthenticated, checkAdmin, orderCtrl.listAllOrders
 app.get('/admin/orders/:id/invoice', checkAuthenticated, checkAdmin, orderCtrl.showAdminInvoice);
 app.get('/admin/orders/:id/edit', checkAuthenticated, checkAdmin, orderCtrl.editOrderStatusForm);
 app.post('/admin/orders/:id/edit', checkAuthenticated, checkAdmin, orderCtrl.updateOrderStatus);
+app.get('/admin/orders/:id/refund', checkAuthenticated, checkAdmin, paypalRefundCtrl.show);
+app.post('/admin/orders/:id/refund', checkAuthenticated, checkAdmin, paypalRefundCtrl.refund);
+app.get('/admin/refunds', checkAuthenticated, checkAdmin, adminRefundsCtrl.list);
+app.get('/admin/refunds/:id', checkAuthenticated, checkAdmin, adminRefundsCtrl.details);
 
 //(Kenneth End) 
 

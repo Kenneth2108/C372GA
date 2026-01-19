@@ -297,7 +297,7 @@
         return sum;
       }, 0);
       const latestOrder = hasOrders ? orders[orders.length - 1] : null;
-      const latestStatus = latestOrder ? (latestOrder.status || 'Pending Order') : 'Pending Order';
+      const latestStatus = latestOrder ? (latestOrder.status || 'On Hold') : 'On Hold';
     %>
 
     <% if (!hasOrders) { %>
@@ -334,15 +334,15 @@
           const gstRate = 0.09;
           const gstAmount = (typeof order.taxAmount === 'number' ? Number(order.taxAmount) : orderSubtotal * gstRate);
           const orderTotal = (typeof order.total === 'number' ? Number(order.total) : orderSubtotal + gstAmount);
-          const statusSteps = ['Pending Order', 'Preparing Order', 'Out for Delivery', 'Completed'];
+          const statusSteps = ['On Hold', 'In Process', 'Shipped', 'Delivered'];
           const statusIcons = ['📦', '🛠️', '🚚', '✅'];
           const statusSubtext = [
-            'We received your order',
-            'Packing your goodies',
-            'Courier picked it up',
+            'Order received',
+            'Preparing your order',
+            'Sent to carrier',
             'Delivered with love'
           ];
-          const currentStatus = (order.status || 'Pending Order');
+          const currentStatus = (order.status || 'On Hold');
           const activeIndex = statusSteps.indexOf(currentStatus) >= 0 ? statusSteps.indexOf(currentStatus) : 0;
       %>
         <div class="order-card"
@@ -474,7 +474,7 @@
       function updateSidebar(card) {
         if (!card) return;
         fields.invoice.textContent = card.dataset.invoice || '—';
-        fields.status.textContent = card.dataset.status || 'Pending Order';
+        fields.status.textContent = card.dataset.status || 'On Hold';
         fields.subtotal.textContent = '$' + (card.dataset.subtotal || '0.00');
         fields.gst.textContent = '$' + (card.dataset.gst || '0.00');
         fields.total.textContent = '$' + (card.dataset.total || '0.00');

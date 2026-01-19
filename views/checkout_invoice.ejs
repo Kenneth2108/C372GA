@@ -93,7 +93,11 @@
 <body>
 
   <!-- âœ… USER NAV PARTIAL -->
-  <%- include('partials/user_navbar', { active: '' }) %>
+  <% if (adminView) { %>
+    <%- include('partials/admin_navbar', { active: '' }) %>
+  <% } else { %>
+    <%- include('partials/user_navbar', { active: '' }) %>
+  <% } %>
 
   <main class="ff-main w-100">
     <div class="container invoice-card">
