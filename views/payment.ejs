@@ -155,13 +155,17 @@
                 <div id="payment-status" class="text-danger small" role="alert"></div>
               </div>
 
-              <div class="method-card muted">
+              <div class="method-card">
                 <div class="method-header">
                   <h3>NETS</h3>
-                  <span class="pill soon">Soon</span>
+                  <span class="pill">Scan to Pay</span>
                 </div>
-                <p class="text-muted mb-3">NETS integration is coming next.</p>
-                <button type="button" class="btn btn-outline-secondary" disabled>Coming soon</button>
+                <p class="text-muted mb-3">You’ll be shown a NETS QR code to scan and pay.</p>
+
+                <form action="/generateNETSQR" method="POST" class="m-0">
+                  <input type="hidden" name="cartTotal" value="<%= summary.total.toFixed(2) %>">
+                  <button type="submit" class="btn btn-outline-pink w-100">Pay with NETS</button>
+                </form>
               </div>
             </div>
           </div>

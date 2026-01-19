@@ -14,7 +14,8 @@ const contactCtrl = require('./controllers/contactController');
 
 //(Isaac Start )
 const productCtrl = require('./controllers/productController');
-
+const netsController = require("./controllers/netsController");
+require("dotenv").config();
 //(Isaac End )
 
 
@@ -126,6 +127,12 @@ app.get('/admin/products/:id/delete', checkAuthenticated, checkAdmin, productCtr
 
 // Add to cart from UserProducts without going to /cart
 app.post('/UserProducts/add/:id', checkAuthenticated, checkUser, CartItemsController.addFromUserProducts);
+
+/* ---------- NETS Checkout ---------- */
+app.post("/generateNETSQR", netsController.generateNETSQR);
+app.get("/nets-qr/success", netsController.renderSuccess);
+app.get("/nets-qr/fail", netsController.renderFail);
+app.get("/sse/payment-status/:txnRetrievalRef", netsController.ssePaymentStatus);
 //(Isaac End )
 
 
