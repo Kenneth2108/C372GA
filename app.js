@@ -118,7 +118,7 @@ app.get('/admin/reports/sales', checkAuthenticated, checkAdmin, reportsCtrl.sale
 
 //(Isaac Start )
 /* ---------- Storefront: all products (public) ---------- */
-app.get('/UserProducts', blockAdminFromUserPages, productCtrl.showStore);
+app.get('/UserProducts', blockAdminFromUserPages, checkAuthenticated, productCtrl.showStore);
 
 /* ---------- Admin: Products CRU ---------- */
 app.get('/admin/products', checkAuthenticated, checkAdmin, productCtrl.getAllProducts); // render admin/products.ejs
