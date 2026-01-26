@@ -3,7 +3,9 @@ const express = require('express');
 const userCtrl = require('./controllers/userController');
 const checkoutCtrl = require('./controllers/checkoutController');
 const paymentCtrl = require('./controllers/paymentController');
-const paypalRefundCtrl = require('./controllers/paypalRefundController');
+const stripeCtrl = require('./controllers/stripeController');
+const paypalRefundCtrl = require('./controllers/paypalstripeRefundController');
+const reportsCtrl = require('./controllers/adminReportsController');
 const adminRefundsCtrl = require('./controllers/adminRefundsController');
 const refundCtrl = require('./controllers/refundController');
 const orderCtrl = require('./controllers/orderController');
@@ -30,6 +32,8 @@ const {
   blockAdminFromUserPages,
   upload
 } = require('./middleware');
+// Stripe webhook needs raw body before urlencoded middleware
+app.post('/webhook/stripe', express.raw({ type: 'application/json' }), stripeCtrl.handleWebhook);
 // Register common middleware (views, static, session, flash)
 registerMiddleware(app);
 //(Kenneth End)
@@ -44,6 +48,9 @@ const CartItemsController = require('./controllers/CartItemController');
 app.get('/checkout', checkAuthenticated, checkUser, paymentCtrl.showPaymentOptions);
 app.post('/checkout/paypal/create-order', checkAuthenticated, checkUser, paymentCtrl.createPaypalOrder);
 app.post('/checkout/paypal/capture', checkAuthenticated, checkUser, paymentCtrl.capturePaypalOrder);
+app.post('/checkout/stripe/create-session', checkAuthenticated, checkUser, stripeCtrl.createCheckoutSession);
+app.get('/checkout/stripe/success', checkAuthenticated, checkUser, stripeCtrl.handleSuccess);
+app.get('/checkout/stripe/cancel', checkAuthenticated, checkUser, stripeCtrl.handleCancel);
 app.get('/invoice', checkAuthenticated, checkUser, checkoutCtrl.showInvoice);
 app.get('/orders', checkAuthenticated, checkUser, orderCtrl.listUserOrders);
 app.get('/orders/:id/invoice', checkAuthenticated, checkUser, orderCtrl.showUserInvoice);
@@ -105,6 +112,7 @@ app.get('/admin/orders/:id/refund', checkAuthenticated, checkAdmin, paypalRefund
 app.post('/admin/orders/:id/refund', checkAuthenticated, checkAdmin, paypalRefundCtrl.refund);
 app.get('/admin/refunds', checkAuthenticated, checkAdmin, adminRefundsCtrl.list);
 app.get('/admin/refunds/:id', checkAuthenticated, checkAdmin, adminRefundsCtrl.details);
+app.get('/admin/reports/sales', checkAuthenticated, checkAdmin, reportsCtrl.salesReport);
 
 //(Kenneth End) 
 

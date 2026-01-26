@@ -1,4 +1,5 @@
 const refundModel = require('../models/refundModel');
+const refundItemModel = require('../models/refundItemModel');
 
 function view(res, name, data = {}) {
   return res.render(name, { ...data, user: res.locals.user });
@@ -41,7 +42,12 @@ module.exports = {
         return res.redirect('/admin/refunds');
       }
 
-      return view(res, 'adminRefundInvoice', { refund, messages });
+      refundItemModel.getByRefund(refundId, (itemsErr, refundItems = []) => {
+        if (itemsErr) {
+          return res.status(500).send('Database error');
+        }
+        return view(res, 'adminRefundInvoice', { refund, refundItems, messages });
+      });
     });
   }
 };

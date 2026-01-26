@@ -334,6 +334,8 @@
           const gstRate = 0.09;
           const gstAmount = (typeof order.taxAmount === 'number' ? Number(order.taxAmount) : orderSubtotal * gstRate);
           const orderTotal = (typeof order.total === 'number' ? Number(order.total) : orderSubtotal + gstAmount);
+          const paymentLabel = (order.payment_method || order.paymentMethod || '');
+          const contactLabel = (order.contact || (user && user.contact) || '');
           const statusSteps = ['On Hold', 'In Process', 'Shipped', 'Delivered'];
           const statusIcons = ['📦', '🛠️', '🚚', '✅'];
           const statusSubtext = [
@@ -352,6 +354,8 @@
              data-subtotal="<%= orderSubtotal.toFixed(2) %>"
              data-gst="<%= gstAmount.toFixed(2) %>"
              data-total="<%= orderTotal.toFixed(2) %>"
+             data-payment="<%= paymentLabel %>"
+             data-contact="<%= contactLabel %>"
              data-link="/orders/<%= order.id %>/invoice">
           <div class="order-header d-flex flex-wrap justify-content-between align-items-center">
             <div>
@@ -359,11 +363,18 @@
               <h5 class="mt-2 mb-0">Order #<%= order.displayNumber || order.id %></h5>
               <small class="text-muted">
                 <%= order.createdAt ? order.createdAt.toDateString() : '' %>
+                <%= order.createdAt ? ', ' + order.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '' %>
               </small>
+              <% if (contactLabel) { %>
+                <small class="text-muted d-block">Contact: <%= contactLabel %></small>
+              <% } %>
             </div>
             <div class="text-end">
               <p class="text-muted mb-1">Total Paid</p>
               <h4 class="text-pink mb-0" style="color:#ff6fa3;">$<%= Number(order.total || 0).toFixed(2) %></h4>
+              <% if (paymentLabel) { %>
+                <small class="text-muted">Payment: <%= String(paymentLabel).toUpperCase() %></small>
+              <% } %>
             </div>
           </div>
 
@@ -449,6 +460,14 @@
             <div class="sidebar-label">Grand Total</div>
             <div class="sidebar-value" data-field="total">$0.00</div>
           </div>
+          <div class="sidebar-item">
+            <div class="sidebar-label">Payment</div>
+            <div class="sidebar-value" data-field="payment">â€”</div>
+          </div>
+          <div class="sidebar-item">
+            <div class="sidebar-label">Contact</div>
+            <div class="sidebar-value" data-field="contact">â€”</div>
+          </div>
           <a class="btn btn-outline-pink btn-sm w-100" data-field="link" href="#" target="_blank">View Invoice</a>
         </aside>
       </div>
@@ -468,6 +487,8 @@
         subtotal: sidebar.querySelector('[data-field="subtotal"]'),
         gst: sidebar.querySelector('[data-field="gst"]'),
         total: sidebar.querySelector('[data-field="total"]'),
+        payment: sidebar.querySelector('[data-field="payment"]'),
+        contact: sidebar.querySelector('[data-field="contact"]'),
         link: sidebar.querySelector('[data-field="link"]')
       };
 
@@ -478,6 +499,14 @@
         fields.subtotal.textContent = '$' + (card.dataset.subtotal || '0.00');
         fields.gst.textContent = '$' + (card.dataset.gst || '0.00');
         fields.total.textContent = '$' + (card.dataset.total || '0.00');
+        if (fields.payment) {
+          fields.payment.textContent = card.dataset.payment
+            ? String(card.dataset.payment).toUpperCase()
+            : '—';
+        }
+        if (fields.contact) {
+          fields.contact.textContent = card.dataset.contact || '—';
+        }
         if (fields.link) {
           fields.link.href = card.dataset.link || '#';
         }

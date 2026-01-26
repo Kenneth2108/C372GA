@@ -36,6 +36,7 @@ function storeInvoiceSession(req, payload) {
   req.session.invoiceData = {
     items: payload.items,
     summary: payload.summary,
+    paymentMethod: payload.paymentMethod || null,
     invoiceMeta: {
       number: payload.invoiceMeta.number,
       date: payload.invoiceMeta.date.toISOString()
@@ -71,7 +72,7 @@ exports.generateInvoice = function (req, res) {
     };
 
     Orders.createOrder(
-      { userId: userId, total: summary.total, invoiceNumber: invoiceMeta.number },
+      { userId: userId, total: summary.total, invoiceNumber: invoiceMeta.number, paymentMethod: 'nets' },
       items,
       function (orderErr) {
         if (orderErr) {
@@ -82,7 +83,7 @@ exports.generateInvoice = function (req, res) {
             console.error('Checkout clear cart error:', clearErr);
           }
 
-          storeInvoiceSession(req, { items, summary, invoiceMeta });
+          storeInvoiceSession(req, { items, summary, invoiceMeta, paymentMethod: 'nets' });
           return res.redirect('/invoice');
         });
       }
@@ -106,6 +107,7 @@ exports.showInvoice = function (req, res) {
     user: req.session.user,
     items: invoiceData.items || [],
     summary: invoiceData.summary || buildSummary(invoiceData.items || []),
+    paymentMethod: invoiceData.paymentMethod || null,
     invoiceMeta: {
       number: invoiceMeta.number,
       date: invoiceDate

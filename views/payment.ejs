@@ -127,6 +127,9 @@
     #payment-status {
       min-height: 20px;
     }
+    #stripe-status {
+      min-height: 20px;
+    }
   </style>
 </head>
 <body>
@@ -153,6 +156,18 @@
                 <p class="text-muted mb-3">Pay quickly with your PayPal balance or card.</p>
                 <div id="paypal-button-container"></div>
                 <div id="payment-status" class="text-danger small" role="alert"></div>
+              </div>
+
+              <div class="method-card">
+                <div class="method-header">
+                  <h3>Stripe</h3>
+                  <span class="pill">Card</span>
+                </div>
+                <p class="text-muted mb-3">Pay securely with your credit or debit card.</p>
+                <button id="stripe-checkout-btn" type="button" class="btn btn-outline-pink w-100">
+                  Pay with Stripe
+                </button>
+                <div id="stripe-status" class="text-danger small mt-2" role="alert"></div>
               </div>
 
               <div class="method-card">
@@ -201,14 +216,24 @@
 
   <%- include('partials/footer') %>
 
+  <script src="https://js.stripe.com/v3/"></script>
   <script src="https://www.paypal.com/sdk/js?client-id=<%= paypalClientId %>&currency=SGD"></script>
   <script>
     (function() {
       var paypalClientId = '<%= paypalClientId %>';
       var statusEl = document.getElementById('payment-status');
+      var stripePublishableKey = '<%= stripePublishableKey %>';
+      var stripeStatusEl = document.getElementById('stripe-status');
+      var stripeButton = document.getElementById('stripe-checkout-btn');
 
       function setStatus(message) {
         statusEl.textContent = message || '';
+      }
+
+      function setStripeStatus(message) {
+        if (stripeStatusEl) {
+          stripeStatusEl.textContent = message || '';
+        }
       }
 
       if (!paypalClientId || typeof paypal === 'undefined') {
@@ -258,6 +283,48 @@
           setStatus('PayPal error: ' + (err && err.message ? err.message : 'Please try again.'));
         }
       }).render('#paypal-button-container');
+
+      if (!stripePublishableKey) {
+        setStripeStatus('Stripe is not configured yet. Please update the publishable key.');
+        if (stripeButton) {
+          stripeButton.disabled = true;
+        }
+        return;
+      }
+
+      if (typeof Stripe === 'undefined') {
+        setStripeStatus('Stripe is unavailable right now. Please try again.');
+        if (stripeButton) {
+          stripeButton.disabled = true;
+        }
+        return;
+      }
+
+      var stripe = Stripe(stripePublishableKey);
+      if (stripeButton) {
+        stripeButton.addEventListener('click', function() {
+          setStripeStatus('Redirecting to Stripe...');
+          fetch('/checkout/stripe/create-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+          })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+              if (!data || !data.id) {
+                throw new Error(data && data.error ? data.error : 'Unable to start Stripe checkout.');
+              }
+              return stripe.redirectToCheckout({ sessionId: data.id });
+            })
+            .then(function(result) {
+              if (result && result.error) {
+                throw result.error;
+              }
+            })
+            .catch(function(err) {
+              setStripeStatus(err.message || 'Stripe checkout failed.');
+            });
+        });
+      }
     })();
   </script>
 </body>
