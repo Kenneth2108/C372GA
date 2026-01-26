@@ -8,18 +8,23 @@ function create(orderId, data, callback) {
   const refundId = payload.paypalRefundId || null;
   const captureId = payload.paypalCaptureId || null;
   const createdAt = payload.createdAt || null;
+  const refundReason = payload.refundReason != null ? String(payload.refundReason) : null;
 
   db.query(
-    'INSERT INTO refunds (order_id, paypal_refund_id, paypal_capture_id, amount, currency, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [orderId, refundId, captureId, amount, currency, status, createdAt],
-    callback
+    'INSERT INTO refunds (order_id, paypal_refund_id, paypal_capture_id, amount, currency, status, created_at, refund_reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [orderId, refundId, captureId, amount, currency, status, createdAt, refundReason],
+    (err, result) => {
+      if (callback) {
+        return callback(err, result ? result.insertId : null, result);
+      }
+    }
   );
 }
 
 function getAll(callback) {
   const sql = `
     SELECT r.id, r.order_id AS orderId, r.amount, r.currency, r.status, r.paypal_refund_id AS paypalRefundId,
-           r.paypal_capture_id AS paypalCaptureId, r.created_at AS createdAt,
+           r.paypal_capture_id AS paypalCaptureId, r.created_at AS createdAt, r.refund_reason AS refundReason,
            o.invoice_number AS invoiceNumber, o.total, u.username, u.email
     FROM refunds r
     INNER JOIN orders o ON o.id = r.order_id
@@ -32,7 +37,7 @@ function getAll(callback) {
 function getById(refundId, callback) {
   const sql = `
     SELECT r.id, r.order_id AS orderId, r.amount, r.currency, r.status, r.paypal_refund_id AS paypalRefundId,
-           r.paypal_capture_id AS paypalCaptureId, r.created_at AS createdAt,
+           r.paypal_capture_id AS paypalCaptureId, r.created_at AS createdAt, r.refund_reason AS refundReason,
            o.invoice_number AS invoiceNumber, o.subtotal, o.tax_amount AS taxAmount, o.total, o.created_at AS orderCreatedAt,
            u.username, u.email,
            (
@@ -56,7 +61,7 @@ function getById(refundId, callback) {
 function getByUser(userId, callback) {
   const sql = `
     SELECT r.id, r.order_id AS orderId, r.amount, r.currency, r.status, r.created_at AS createdAt,
-           o.invoice_number AS invoiceNumber, o.total, o.created_at AS orderCreatedAt
+           o.invoice_number AS invoiceNumber, o.total, o.created_at AS orderCreatedAt, r.refund_reason AS refundReason
     FROM refunds r
     INNER JOIN orders o ON o.id = r.order_id
     WHERE o.user_id = ?
@@ -68,7 +73,7 @@ function getByUser(userId, callback) {
 function getByIdForUser(refundId, userId, callback) {
   const sql = `
     SELECT r.id, r.order_id AS orderId, r.amount, r.currency, r.status, r.paypal_refund_id AS paypalRefundId,
-           r.paypal_capture_id AS paypalCaptureId, r.created_at AS createdAt,
+           r.paypal_capture_id AS paypalCaptureId, r.created_at AS createdAt, r.refund_reason AS refundReason,
            o.invoice_number AS invoiceNumber, o.subtotal, o.tax_amount AS taxAmount, o.total, o.created_at AS orderCreatedAt,
            u.username, u.email,
            (

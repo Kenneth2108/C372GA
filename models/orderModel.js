@@ -67,6 +67,9 @@ const Orders = {
     const invoiceNumber = orderData && orderData.invoiceNumber ? String(orderData.invoiceNumber) : null;
     const paypalOrderId = orderData && orderData.paypalOrderId ? String(orderData.paypalOrderId) : null;
     const paypalCaptureId = orderData && orderData.paypalCaptureId ? String(orderData.paypalCaptureId) : null;
+    const paymentMethod = orderData && (orderData.paymentMethod || orderData.payment_method)
+      ? String(orderData.paymentMethod || orderData.payment_method)
+      : null;
 
     const subtotal = (() => {
       if (orderData && orderData.subtotal != null) {
@@ -94,13 +97,13 @@ const Orders = {
       }
 
       const orderSql = `
-        INSERT INTO orders (user_id, subtotal, tax_amount, total, invoice_number, status, paypal_order_id, paypal_capture_id, carrier, shipment_date, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        INSERT INTO orders (user_id, subtotal, tax_amount, total, invoice_number, status, paypal_order_id, paypal_capture_id, payment_method, carrier, shipment_date, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
       `;
 
       db.query(
         orderSql,
-        [userId, subtotal, taxAmount, total, invoiceNumber, 'On Hold', paypalOrderId, paypalCaptureId, null, null],
+        [userId, subtotal, taxAmount, total, invoiceNumber, 'On Hold', paypalOrderId, paypalCaptureId, paymentMethod, null, null],
         function (orderErr, result) {
         if (orderErr) {
           return db.rollback(function () {
@@ -148,6 +151,7 @@ const Orders = {
         o.shipment_date,
         o.paypal_order_id,
         o.paypal_capture_id,
+        o.payment_method,
         o.created_at,
         oi.id AS order_item_id,
         oi.product_id,
@@ -183,6 +187,7 @@ const Orders = {
             shipment_date: row.shipment_date || null,
             paypal_order_id: row.paypal_order_id,
             paypal_capture_id: row.paypal_capture_id,
+            payment_method: row.payment_method || null,
             createdAt: row.created_at,
             items: []
           };
@@ -220,6 +225,7 @@ const Orders = {
         o.shipment_date,
         o.paypal_order_id,
         o.paypal_capture_id,
+        o.payment_method,
         o.created_at,
         u.username,
         u.email,
@@ -258,6 +264,7 @@ const Orders = {
             shipment_date: row.shipment_date || null,
             paypal_order_id: row.paypal_order_id,
             paypal_capture_id: row.paypal_capture_id,
+            payment_method: row.payment_method || null,
             created_at: row.created_at,
             username: row.username,
             email: row.email,
@@ -301,6 +308,7 @@ const Orders = {
         o.shipment_date,
         o.paypal_order_id,
         o.paypal_capture_id,
+        o.payment_method,
         o.created_at,
         u.username,
         u.email,
@@ -338,6 +346,7 @@ const Orders = {
         shipment_date: rows[0].shipment_date || null,
         paypal_order_id: rows[0].paypal_order_id,
         paypal_capture_id: rows[0].paypal_capture_id,
+        payment_method: rows[0].payment_method || null,
         username: rows[0].username,
         email: rows[0].email,
         items: []

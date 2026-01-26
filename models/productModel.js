@@ -62,6 +62,43 @@ const Product = {
       callback(null, result.affectedRows);
     });
   },
+
+  //Kenneth Start
+  // Increase product stock quantities for restocks
+  increaseQuantities: function (items, callback) {
+    if (!Array.isArray(items) || items.length === 0) {
+      return callback(null);
+    }
+
+    const queue = items.slice();
+
+    function next() {
+      if (queue.length === 0) {
+        return callback(null);
+      }
+
+      const item = queue.shift();
+      const id = item && item.id != null ? Number(item.id) : null;
+      const qty = item && item.quantity != null ? Number(item.quantity) : 0;
+
+      if (!id || !Number.isFinite(qty) || qty <= 0) {
+        return next();
+      }
+
+      db.query(
+        'UPDATE products SET quantity = quantity + ? WHERE id = ?',
+        [qty, id],
+        function (err) {
+          if (err) return callback(err);
+          next();
+        }
+      );
+    }
+
+    next();
+  },
+  //Kenneth End
+
     // jiaxuan start
     // Delete a product
   deleteProduct: function (id, callback) {

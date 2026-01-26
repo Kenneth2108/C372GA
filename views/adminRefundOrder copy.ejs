@@ -8,37 +8,19 @@
   <style>
     body {
       min-height: 100vh;
-      background: #fff6fb;
+      background: linear-gradient(180deg, #f6fbff 0%, #edf3ff 45%, #f5f7fb 100%);
       font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      display: flex;
-      flex-direction: column;
-    }
-    main { flex: 1 0 auto; }
-    .navbar {
-      background: linear-gradient(90deg, #ff8db8, #ff6fa3);
-    }
-    .navbar-brand {
-      color: white;
-      font-weight: 700;
-    }
-    .nav-link {
-      color: white !important;
-      border-radius: 8px;
-      padding: 8px 14px;
-    }
-    .nav-link:hover {
-      background: #ff8db8;
     }
     .page-card {
       background: #fff;
       border-radius: 22px;
-      box-shadow: 0 20px 45px rgba(255, 111, 163, 0.18), 0 3px 10px rgba(255, 111, 163, 0.12);
+      box-shadow: 0 20px 45px rgba(15,23,42,.12), 0 3px 10px rgba(15,23,42,.08);
     }
     .hero-intro {
-      background: linear-gradient(135deg, #ffe7f3 0%, #fff2f9 50%, #f6f1ff 100%);
+      background: linear-gradient(135deg, #eef4ff 0%, #fef9ff 50%, #ecf3ff 100%);
       border-radius: 22px;
       padding: 1.5rem 2rem;
-      border: 1px solid rgba(255, 111, 163, .25);
+      border: 1px solid rgba(99, 123, 255, .15);
       margin-bottom: 1.5rem;
       display: flex;
       align-items: center;
@@ -52,7 +34,7 @@
       position: absolute;
       width: 180px;
       height: 180px;
-      background: radial-gradient(circle at top right, rgba(255, 143, 223, .45), transparent 70%);
+      background: radial-gradient(circle at top right, rgba(255, 143, 223, .35), transparent 70%);
       top: -80px;
       right: -60px;
       border-radius: 50%;
@@ -61,20 +43,20 @@
       width: 56px;
       height: 56px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #ff6fa3, #ff9fd3);
+      background: linear-gradient(135deg, #0d6efd, #54a9ff);
       color: #fff;
       font-size: 1.4rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 12px 25px rgba(255, 111, 163, .35);
+      box-shadow: 0 12px 25px rgba(13, 110, 253, .35);
       font-weight: 700;
     }
     .hero-text h2 { margin-bottom: .4rem; font-weight: 700; color: #101828; }
     .hero-text p { margin: 0; color: #475467; }
     .hero-badge {
-      background: rgba(255, 111, 163, .15);
-      color: #ff6fa3;
+      background: rgba(99, 123, 255, .12);
+      color: #4154ff;
       padding: .25rem .85rem;
       border-radius: 999px;
       font-size: .8rem;
@@ -84,9 +66,9 @@
   </style>
 </head>
 <body>
-  <%- include('partials/admin_navbar') %>
+  <%- include('partials/adminNav', { active: 'orders' }) %>
 
-  <main class="container my-4">
+  <div class="container my-4">
     <div class="page-card p-4">
       <div class="hero-intro">
         <div class="hero-icon" aria-hidden="true">
@@ -152,7 +134,7 @@
         </div>
         <div class="mb-3">
           <label class="form-label">Invoice Number</label>
-          <input type="text" class="form-control" readonly value="<%= order.invoiceNumber || order.invoice_number || '' %>">
+          <input type="text" class="form-control" readonly value="<%= order.invoiceNumber || '' %>">
         </div>
 
         <div class="mb-3">
@@ -177,8 +159,13 @@
           </button>
           <div class="collapse mt-3" id="paymentDetails">
             <div class="card card-body">
-              <label class="form-label">PayPal Capture ID</label>
-              <input type="text" class="form-control" readonly value="<%= order.paypalCaptureId || order.paypal_capture_id || '' %>">
+              <%
+                const paymentMethod = (order.paymentMethod || '').trim().toLowerCase();
+                const captureId = order.paypalCaptureId || '';
+                const isStripe = paymentMethod === 'stripe' || captureId.startsWith('pi_');
+              %>
+              <label class="form-label"><%= isStripe ? 'Stripe Payment Intent ID' : 'PayPal Capture ID' %></label>
+              <input type="text" class="form-control" readonly value="<%= captureId %>">
             </div>
           </div>
         </div>
@@ -336,25 +323,45 @@
         <% } %>
       <% } %>
     </div>
-  </main>
+  </div>
 
   <style>
+    :root { --app-footer-height: 68px; }
+    html, body { height: auto !important; }
+    body { min-height: 100vh; padding-bottom: calc(var(--app-footer-height) + 140px); }
+    .app-footer { background-color: #0b2131; color: #e6edf3; }
+    .app-footer a { color: #e6edf3; text-decoration: none; }
+    .app-footer a:hover { text-decoration: underline; }
+    .app-footer-fixed { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1030; }
+    .app-footer-gradient {
+      height: 4px;
+      background: linear-gradient(
+        90deg,
+        var(--bs-primary, #0d6efd),
+        var(--bs-info, #0dcaf0),
+        var(--bs-success, #198754),
+        var(--bs-warning, #ffc107),
+        var(--bs-danger, #dc3545)
+      );
+    }
+    .app-footer-inner { font-size: .95rem; }
+
     .refund-summary {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 12px;
       padding: 12px;
-      border: 1px solid #ffe1ef;
+      border: 1px solid #e6e9ef;
       border-radius: 12px;
-      background: linear-gradient(135deg, #fff2f9, #ffffff);
-      box-shadow: 0 6px 16px rgba(255, 111, 163, 0.08);
+      background: linear-gradient(135deg, #f7f9fc, #ffffff);
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
     }
 
     .refund-summary-item {
       padding: 10px 12px;
       border-radius: 10px;
       background: #fff;
-      border: 1px solid #ffe6f2;
+      border: 1px solid #eef2f6;
       position: relative;
       overflow: hidden;
       transition: transform .18s ease, box-shadow .18s ease;
@@ -369,14 +376,14 @@
       border-radius: 8px;
       margin-bottom: 6px;
       color: inherit;
-      background: rgba(255, 111, 163, 0.08);
+      background: rgba(15, 23, 42, 0.04);
     }
 
     .refund-summary-label {
       font-size: .8rem;
       letter-spacing: .02em;
       text-transform: uppercase;
-      color: #b98ca3;
+      color: #6b7280;
       margin-bottom: 4px;
     }
 
@@ -393,28 +400,28 @@
       top: 0;
       bottom: 0;
       width: 4px;
-      background: #ffd0e3;
+      background: #cbd5f5;
     }
 
     .refund-summary-item:hover {
       transform: translateY(-4px);
-      box-shadow: 0 12px 24px rgba(255, 111, 163, 0.18);
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
     }
 
-    .refund-summary-total::after { background: #ff6fa3; }
-    .refund-summary-restock::after { background: #f4a3c6; }
-    .refund-summary-no-restock::after { background: #c8a2b5; }
+    .refund-summary-total::after { background: #3b82f6; }
+    .refund-summary-restock::after { background: #22c55e; }
+    .refund-summary-no-restock::after { background: #9ca3af; }
 
     .refund-summary-total {
-      background: linear-gradient(180deg, rgba(255, 111, 163, 0.12), #ffffff);
+      background: linear-gradient(180deg, rgba(59, 130, 246, 0.1), #ffffff);
     }
 
     .refund-summary-restock {
-      background: linear-gradient(180deg, rgba(244, 163, 198, 0.18), #ffffff);
+      background: linear-gradient(180deg, rgba(34, 197, 94, 0.1), #ffffff);
     }
 
     .refund-summary-no-restock {
-      background: linear-gradient(180deg, rgba(200, 162, 181, 0.18), #ffffff);
+      background: linear-gradient(180deg, rgba(148, 163, 184, 0.14), #ffffff);
     }
 
     .refund-header-summary {
@@ -423,8 +430,8 @@
       gap: 12px;
       padding: 12px;
       border-radius: 12px;
-      background: linear-gradient(135deg, rgba(255, 111, 163, 0.16), rgba(255, 210, 228, 0.2), #ffffff);
-      border: 1px solid #ffe1ef;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.14), rgba(34, 197, 94, 0.08), #ffffff);
+      border: 1px solid #e6e9ef;
       margin-bottom: 16px;
     }
 
@@ -432,7 +439,7 @@
       padding: 10px 12px;
       border-radius: 10px;
       background: #fff;
-      border: 1px solid #ffe6f2;
+      border: 1px solid #eef2f6;
       position: relative;
       overflow: hidden;
       transition: transform .18s ease, box-shadow .18s ease;
@@ -442,7 +449,7 @@
       font-size: .75rem;
       letter-spacing: .05em;
       text-transform: uppercase;
-      color: #b98ca3;
+      color: #6b7280;
       margin-bottom: 4px;
     }
 
@@ -459,12 +466,12 @@
       top: 0;
       height: 3px;
       width: 100%;
-      background: linear-gradient(90deg, #ff6fa3, #ff9fd3, #c8a2b5);
+      background: linear-gradient(90deg, #3b82f6, #22c55e, #9ca3af);
     }
 
     .refund-header-item:hover {
       transform: translateY(-4px);
-      box-shadow: 0 12px 24px rgba(255, 111, 163, 0.2);
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
     }
 
     .refund-status-pill {
@@ -476,9 +483,9 @@
       font-weight: 600;
       margin-bottom: 16px;
       border: 1px solid transparent;
-      background: #ffe9f3;
-      color: #b24d76;
-      box-shadow: 0 8px 20px rgba(255, 111, 163, 0.18);
+      background: #eef2ff;
+      color: #1e3a8a;
+      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.08);
     }
 
     .refund-status-icon {
@@ -488,15 +495,15 @@
     }
 
     .refund-status-ok {
-      background: #ffe3f0;
-      color: #b24d76;
-      border-color: #ffc2dc;
+      background: #e0f2fe;
+      color: #075985;
+      border-color: #bae6fd;
     }
 
     .refund-status-none {
-      background: #f7e9f1;
-      color: #8b5d75;
-      border-color: #ecd6e1;
+      background: #f1f5f9;
+      color: #334155;
+      border-color: #e2e8f0;
     }
 
     .refund-status-badge {
@@ -510,19 +517,19 @@
     }
 
     .refund-status-badge-ok {
-      background: #ffd6e7;
-      color: #c73c73;
-      box-shadow: inset 0 0 0 1px rgba(199, 60, 115, 0.2);
+      background: #dbeafe;
+      color: #1d4ed8;
+      box-shadow: inset 0 0 0 1px rgba(29, 78, 216, 0.18);
     }
 
     .refund-status-badge-none {
-      background: #f1dfe8;
-      color: #8b5d75;
-      box-shadow: inset 0 0 0 1px rgba(139, 93, 117, 0.2);
+      background: #e5e7eb;
+      color: #4b5563;
+      box-shadow: inset 0 0 0 1px rgba(75, 85, 99, 0.2);
     }
   </style>
 
-  <%- include('partials/footer') %>
+  <%- include('partials/footer', { footerClass: 'app-footer-fixed' }) %>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
@@ -575,7 +582,7 @@
         const noRestockEl = document.getElementById('refundSummaryNoRestock');
         if (!amountEl || !restockEl || !noRestockEl) return;
 
-        if (refundType && refundType.value === 'custom') {
+        if (refundType && refundType.value === 'partial') {
           const totals = getQtyTotals();
           amountEl.textContent = `$${formatMoney(Math.min(getPartialTotal(), remainingAmount))}`;
           restockEl.textContent = String(totals.restock);
@@ -584,19 +591,13 @@
         }
 
         amountEl.textContent = `$${formatMoney(remainingAmount)}`;
-        if (refundType && refundType.value === 'full_no_restock') {
-          restockEl.textContent = '0';
-          noRestockEl.textContent = String(getRemainingQtyTotal());
-          return;
-        }
-
         restockEl.textContent = String(getRemainingQtyTotal());
         noRestockEl.textContent = '0';
       }
 
       function syncRefundAmount() {
         if (!refundAmount) return;
-        if (refundType && refundType.value === 'custom') {
+        if (refundType && refundType.value === 'partial') {
           const partialTotal = getPartialTotal();
           refundAmount.value = formatMoney(Math.min(partialTotal, remainingAmount));
         } else {

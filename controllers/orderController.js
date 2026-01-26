@@ -88,11 +88,17 @@ exports.showUserInvoice = function (req, res) {
       date: order.created_at ? new Date(order.created_at) : new Date()
     };
 
+    const rawPayment = order.payment_method || order.paymentMethod || '';
+    const paymentMethod = rawPayment
+      ? String(rawPayment)
+      : (order.paypal_capture_id ? 'PayPal' : 'NETS');
+
     return res.render('checkout_invoice', {
       user: userSession,
       items,
       summary,
       invoiceMeta,
+      paymentMethod,
       adminView: false,
       backLink: '/orders',
       backLabel: 'Back to Orders'
@@ -165,11 +171,17 @@ exports.showAdminInvoice = function (req, res) {
       email: order.email || ''
     };
 
+    const rawPayment = order.payment_method || order.paymentMethod || '';
+    const paymentMethod = rawPayment
+      ? String(rawPayment)
+      : (order.paypal_capture_id ? 'PayPal' : 'NETS');
+
     return res.render('checkout_invoice', {
       user: invoiceUser,
       items,
       summary,
       invoiceMeta,
+      paymentMethod,
       adminView: true,
       backLink: '/admin/orders',
       backLabel: 'Back to Orders'

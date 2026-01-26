@@ -31,4 +31,18 @@ async function refundCapture(captureId, amount, currencyCode) {
   return { status: response.status, data };
 }
 
-module.exports = { refundCapture };
+async function getCaptureDetails(captureId) {
+  const accessToken = await getAccessToken();
+  const response = await fetchFn(`${PAYPAL_API}/v2/payments/captures/${captureId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${accessToken}`
+    }
+  });
+
+  const data = await response.json();
+  return { status: response.status, data };
+}
+
+module.exports = { refundCapture, getCaptureDetails };

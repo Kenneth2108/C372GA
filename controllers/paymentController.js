@@ -45,6 +45,7 @@ function storeInvoiceSession(req, payload) {
   req.session.invoiceData = {
     items: payload.items,
     summary: payload.summary,
+    paymentMethod: payload.paymentMethod || null,
     invoiceMeta: {
       number: payload.invoiceMeta.number,
       date: payload.invoiceMeta.date
@@ -59,7 +60,8 @@ function storePendingCheckout(req, payload) {
   req.session.pendingCheckout = {
     items: payload.items,
     summary: payload.summary,
-    invoiceMeta: payload.invoiceMeta
+    invoiceMeta: payload.invoiceMeta,
+    paymentMethod: payload.paymentMethod || null
   };
 }
 
@@ -144,7 +146,7 @@ exports.createPaypalOrder = function (req, res) {
     const invoiceMeta = buildInvoiceMeta();
     const amount = summary.total.toFixed(2);
 
-    storePendingCheckout(req, { items, summary, invoiceMeta });
+    storePendingCheckout(req, { items, summary, invoiceMeta, paymentMethod: 'paypal' });
 
     try {
       const order = await paypal.createOrder(amount);
@@ -183,18 +185,19 @@ exports.capturePaypalOrder = function (req, res) {
       }
 
       const captureId = extractCaptureId(capture);
-      Orders.createOrder(
-        {
-          userId: userId,
-          subtotal: pending.summary.subtotal,
-          taxAmount: pending.summary.taxAmount,
-          total: pending.summary.total,
-          invoiceNumber: pending.invoiceMeta.number,
-          paypalOrderId: orderId,
-          paypalCaptureId: captureId
-        },
-        pending.items,
-        function (orderErr) {
+          Orders.createOrder(
+            {
+              userId: userId,
+              subtotal: pending.summary.subtotal,
+              taxAmount: pending.summary.taxAmount,
+              total: pending.summary.total,
+              invoiceNumber: pending.invoiceMeta.number,
+              paypalOrderId: orderId,
+              paypalCaptureId: captureId,
+              paymentMethod: pending.paymentMethod || 'paypal'
+            },
+            pending.items,
+            function (orderErr) {
           if (orderErr) {
             console.error('Order create error:', orderErr);
             return res.status(500).json({ error: 'Unable to finalize the order.' });
