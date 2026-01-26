@@ -67,6 +67,16 @@
       gap: 1rem;
       margin-bottom: 0.5rem;
     }
+    .method-choice {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: #312631;
+    }
+    .method-choice input {
+      accent-color: #ff6fa3;
+    }
     .method-header h3 {
       margin: 0;
       font-size: 1.15rem;
@@ -147,25 +157,44 @@
             <div class="payment-methods">
               <div class="method-card">
                 <div class="method-header">
-                  <h3>PayPal</h3>
+                  <div class="method-choice">
+                    <input type="radio" name="paymentMethod" id="method-paypal" value="paypal" required>
+                    <label for="method-paypal">PayPal</label>
+                  </div>
                   <span class="pill">Recommended</span>
                 </div>
                 <p class="text-muted mb-3">Pay quickly with your PayPal balance or card.</p>
-                <div id="paypal-button-container"></div>
+                <div id="paypal-button-container" style="display: none;"></div>
                 <div id="payment-status" class="text-danger small" role="alert"></div>
               </div>
 
               <div class="method-card">
                 <div class="method-header">
-                  <h3>NETS</h3>
+                  <div class="method-choice">
+                    <input type="radio" name="paymentMethod" id="method-nets" value="nets" required>
+                    <label for="method-nets">NETS</label>
+                  </div>
                   <span class="pill">Scan to Pay</span>
                 </div>
                 <p class="text-muted mb-3">You’ll be shown a NETS QR code to scan and pay.</p>
 
-                <form action="/generateNETSQR" method="POST" class="m-0">
+                <form action="/generateNETSQR" method="POST" class="m-0" id="nets-form">
                   <input type="hidden" name="cartTotal" value="<%= summary.total.toFixed(2) %>">
-                  <button type="submit" class="btn btn-outline-pink w-100">Pay with NETS</button>
+                  <button type="submit" class="btn btn-outline-pink w-100" id="nets-button" disabled>Pay with NETS</button>
                 </form>
+              </div>
+
+              <div class="method-card">
+                <div class="method-header">
+                  <div class="method-choice">
+                    <input type="radio" name="paymentMethod" id="method-stripe" value="stripe" required>
+                    <label for="method-stripe">Stripe</label>
+                  </div>
+                  <span class="pill">Card</span>
+                </div>
+                <p class="text-muted mb-3">Pay securely with credit/debit card via Stripe Checkout.</p>
+                <button type="button" class="btn btn-outline-pink w-100" id="stripe-button" disabled>Pay with Stripe</button>
+                <div id="stripe-status" class="text-danger small mt-2" role="alert"></div>
               </div>
             </div>
           </div>
@@ -202,62 +231,137 @@
   <%- include('partials/footer') %>
 
   <script src="https://www.paypal.com/sdk/js?client-id=<%= paypalClientId %>&currency=SGD"></script>
+  <script src="https://js.stripe.com/v3/"></script>
   <script>
     (function() {
       var paypalClientId = '<%= paypalClientId %>';
+      var stripePublishableKey = '<%= stripePublishableKey %>';
       var statusEl = document.getElementById('payment-status');
+      var stripeStatusEl = document.getElementById('stripe-status');
+      var paypalContainer = document.getElementById('paypal-button-container');
+      var netsButton = document.getElementById('nets-button');
+      var stripeButton = document.getElementById('stripe-button');
+      var stripe = stripePublishableKey ? Stripe(stripePublishableKey) : null;
 
       function setStatus(message) {
         statusEl.textContent = message || '';
       }
 
-      if (!paypalClientId || typeof paypal === 'undefined') {
-        setStatus('PayPal is not configured yet. Please update the client id.');
-        return;
+      function setStripeStatus(message) {
+        if (stripeStatusEl) {
+          stripeStatusEl.textContent = message || '';
+        }
       }
 
-      paypal.Buttons({
-        createOrder: function() {
+      function setSelectedMethod(method) {
+        if (paypalContainer) {
+          paypalContainer.style.display = method === 'paypal' ? 'block' : 'none';
+        }
+        if (netsButton) {
+          netsButton.disabled = method !== 'nets';
+        }
+        if (stripeButton) {
+          stripeButton.disabled = method !== 'stripe';
+        }
+        if (method !== 'paypal') {
           setStatus('');
-          return fetch('/checkout/paypal/create-order', {
+        }
+        if (method !== 'stripe') {
+          setStripeStatus('');
+        }
+      }
+
+      document.querySelectorAll('input[name="paymentMethod"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+          setSelectedMethod(this.value);
+        });
+      });
+
+      setSelectedMethod(null);
+
+      if (!paypalClientId || typeof paypal === 'undefined') {
+        setStatus('PayPal is not configured yet. Please update the client id.');
+      } else {
+        paypal.Buttons({
+          createOrder: function() {
+            setStatus('');
+            return fetch('/checkout/paypal/create-order', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+              .then(function(res) { return res.json(); })
+              .then(function(data) {
+                if (!data || !data.id) {
+                  throw new Error(data && data.error ? data.error : 'Unable to create PayPal order.');
+                }
+                return data.id;
+              })
+              .catch(function(err) {
+                setStatus(err.message || 'Unable to start PayPal checkout.');
+                throw err;
+              });
+          },
+          onApprove: function(data) {
+            setStatus('Finalizing payment...');
+            return fetch('/checkout/paypal/capture', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: new URLSearchParams({ orderId: data.orderID })
+            })
+              .then(function(res) { return res.json(); })
+              .then(function(result) {
+                if (result && result.redirectUrl) {
+                  window.location.href = result.redirectUrl;
+                  return;
+                }
+                throw new Error(result && result.error ? result.error : 'Payment capture failed.');
+              })
+              .catch(function(err) {
+                setStatus(err.message || 'Payment capture failed.');
+              });
+          },
+          onError: function(err) {
+            setStatus('PayPal error: ' + (err && err.message ? err.message : 'Please try again.'));
+          }
+        }).render('#paypal-button-container');
+      }
+
+      if (!stripePublishableKey || !stripe) {
+        setStripeStatus('Stripe is not configured yet. Please update the publishable key.');
+      }
+
+      if (stripeButton) {
+        stripeButton.addEventListener('click', function () {
+          setStripeStatus('');
+          if (!stripe) {
+            setStripeStatus('Stripe is not configured yet.');
+            return;
+          }
+
+          stripeButton.disabled = true;
+
+          fetch('/checkout/stripe/create-session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
           })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
               if (!data || !data.id) {
-                throw new Error(data && data.error ? data.error : 'Unable to create PayPal order.');
+                throw new Error(data && data.error ? data.error : 'Unable to start Stripe checkout.');
               }
-              return data.id;
+              return stripe.redirectToCheckout({ sessionId: data.id });
             })
-            .catch(function(err) {
-              setStatus(err.message || 'Unable to start PayPal checkout.');
-              throw err;
-            });
-        },
-        onApprove: function(data) {
-          setStatus('Finalizing payment...');
-          return fetch('/checkout/paypal/capture', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ orderId: data.orderID })
-          })
-            .then(function(res) { return res.json(); })
-            .then(function(result) {
-              if (result && result.redirectUrl) {
-                window.location.href = result.redirectUrl;
-                return;
+            .then(function (result) {
+              if (result && result.error) {
+                throw new Error(result.error.message || 'Stripe redirect failed.');
               }
-              throw new Error(result && result.error ? result.error : 'Payment capture failed.');
             })
-            .catch(function(err) {
-              setStatus(err.message || 'Payment capture failed.');
+            .catch(function (err) {
+              setStripeStatus(err.message || 'Stripe checkout failed.');
+              stripeButton.disabled = false;
             });
-        },
-        onError: function(err) {
-          setStatus('PayPal error: ' + (err && err.message ? err.message : 'Please try again.'));
-        }
-      }).render('#paypal-button-container');
+        });
+      }
     })();
   </script>
 </body>

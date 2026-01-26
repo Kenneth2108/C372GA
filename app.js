@@ -3,6 +3,7 @@ const express = require('express');
 const userCtrl = require('./controllers/userController');
 const checkoutCtrl = require('./controllers/checkoutController');
 const paymentCtrl = require('./controllers/paymentController');
+const stripeCtrl = require('./controllers/stripeController');
 const paypalRefundCtrl = require('./controllers/paypalRefundController');
 const adminRefundsCtrl = require('./controllers/adminRefundsController');
 const refundCtrl = require('./controllers/refundController');
@@ -30,6 +31,8 @@ const {
   blockAdminFromUserPages,
   upload
 } = require('./middleware');
+// Stripe webhook needs raw body before urlencoded middleware
+app.post('/webhook/stripe', express.raw({ type: 'application/json' }), stripeCtrl.handleWebhook);
 // Register common middleware (views, static, session, flash)
 registerMiddleware(app);
 //(Kenneth End)
@@ -44,6 +47,9 @@ const CartItemsController = require('./controllers/CartItemController');
 app.get('/checkout', checkAuthenticated, checkUser, paymentCtrl.showPaymentOptions);
 app.post('/checkout/paypal/create-order', checkAuthenticated, checkUser, paymentCtrl.createPaypalOrder);
 app.post('/checkout/paypal/capture', checkAuthenticated, checkUser, paymentCtrl.capturePaypalOrder);
+app.post('/checkout/stripe/create-session', checkAuthenticated, checkUser, stripeCtrl.createCheckoutSession);
+app.get('/checkout/stripe/success', checkAuthenticated, checkUser, stripeCtrl.handleSuccess);
+app.get('/checkout/stripe/cancel', checkAuthenticated, checkUser, stripeCtrl.handleCancel);
 app.get('/invoice', checkAuthenticated, checkUser, checkoutCtrl.showInvoice);
 app.get('/orders', checkAuthenticated, checkUser, orderCtrl.listUserOrders);
 app.get('/orders/:id/invoice', checkAuthenticated, checkUser, orderCtrl.showUserInvoice);

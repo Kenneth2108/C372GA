@@ -120,7 +120,8 @@ exports.showPaymentOptions = function (req, res) {
       user: req.session.user,
       items,
       summary,
-      paypalClientId: process.env.PAYPAL_CLIENT_ID || ''
+      paypalClientId: process.env.PAYPAL_CLIENT_ID || '',
+      stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY || ''
     });
   });
 };
