@@ -81,6 +81,7 @@ exports.generateNETSQR = function (req, res) {
     const summary = buildSummary(items);
     const invoiceMeta = buildInvoiceMeta();
 
+    
     // Save the "pending checkout" in session so success route can use it
     req.session.pendingCheckout = {
       items: items,
