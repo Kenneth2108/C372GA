@@ -177,8 +177,14 @@
           </button>
           <div class="collapse mt-3" id="paymentDetails">
             <div class="card card-body">
-              <label class="form-label">PayPal Capture ID</label>
-              <input type="text" class="form-control" readonly value="<%= order.paypalCaptureId || order.paypal_capture_id || '' %>">
+              <% const paymentMethodRaw = String(order.paymentMethod || order.payment_method || '').toLowerCase(); %>
+              <% const isStripePayment = paymentMethodRaw === 'stripe'; %>
+              <label class="form-label"><%= isStripePayment ? 'Stripe Payment Intent ID' : 'PayPal Capture ID' %></label>
+              <input
+                type="text"
+                class="form-control"
+                readonly
+                value="<%= isStripePayment ? (order.stripePaymentIntentId || order.stripe_payment_intent_id || '') : (order.paypalCaptureId || order.paypal_capture_id || '') %>">
             </div>
           </div>
         </div>

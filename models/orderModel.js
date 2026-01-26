@@ -1,49 +1,5 @@
 const db = require('../db');
 
-let orderColumnSupport = null;
-
-function detectOrderColumns(callback) {
-  if (orderColumnSupport !== null) {
-    return callback(null, orderColumnSupport);
-  }
-
-  const checks = [
-    "SHOW COLUMNS FROM orders LIKE 'payment_method'",
-    "SHOW COLUMNS FROM orders LIKE 'payment_status'",
-    "SHOW COLUMNS FROM orders LIKE 'stripe_session_id'",
-    "SHOW COLUMNS FROM orders LIKE 'stripe_payment_intent_id'"
-  ];
-
-  const support = {
-    payment_method: false,
-    payment_status: false,
-    stripe_session_id: false,
-    stripe_payment_intent_id: false
-  };
-
-  let idx = 0;
-  function next() {
-    if (idx >= checks.length) {
-      orderColumnSupport = support;
-      return callback(null, support);
-    }
-
-    const sql = checks[idx++];
-    db.query(sql, function (err, rows) {
-      if (err) {
-        return callback(err);
-      }
-      if (sql.includes('payment_method')) support.payment_method = Array.isArray(rows) && rows.length > 0;
-      if (sql.includes('payment_status')) support.payment_status = Array.isArray(rows) && rows.length > 0;
-      if (sql.includes('stripe_session_id')) support.stripe_session_id = Array.isArray(rows) && rows.length > 0;
-      if (sql.includes('stripe_payment_intent_id')) support.stripe_payment_intent_id = Array.isArray(rows) && rows.length > 0;
-      next();
-    });
-  }
-
-  next();
-}
-
 function insertOrderItems(orderId, items, callback) {
   if (!items || items.length === 0) {
     return callback(null);
@@ -116,9 +72,6 @@ const Orders = {
     const paymentMethod = orderData && (orderData.paymentMethod || orderData.payment_method)
       ? String(orderData.paymentMethod || orderData.payment_method)
       : null;
-    const paymentStatus = orderData && (orderData.paymentStatus || orderData.payment_status)
-      ? String(orderData.paymentStatus || orderData.payment_status)
-      : 'Paid';
 
     const subtotal = (() => {
       if (orderData && orderData.subtotal != null) {
@@ -145,65 +98,52 @@ const Orders = {
         return callback(txErr);
       }
 
-      detectOrderColumns(function (detectErr, supports) {
-        if (detectErr) {
+      const orderSql = `
+        INSERT INTO orders (user_id, subtotal, tax_amount, total, invoice_number, status, paypal_order_id, paypal_capture_id, stripe_session_id, stripe_payment_intent_id, payment_method, carrier, shipment_date, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+      `;
+
+      db.query(
+        orderSql,
+        [
+          userId,
+          subtotal,
+          taxAmount,
+          total,
+          invoiceNumber,
+          'On Hold',
+          paypalOrderId,
+          paypalCaptureId,
+          stripeSessionId,
+          stripePaymentIntentId,
+          paymentMethod,
+          null,
+          null
+        ],
+        function (orderErr, result) {
+        if (orderErr) {
           return db.rollback(function () {
-            callback(detectErr);
+            callback(orderErr);
           });
         }
 
-        const columns = ['user_id', 'subtotal', 'tax_amount', 'total', 'invoice_number', 'status', 'paypal_order_id', 'paypal_capture_id'];
-        const values = [userId, subtotal, taxAmount, total, invoiceNumber, 'On Hold', paypalOrderId, paypalCaptureId];
+        const orderId = result.insertId;
 
-        if (supports.stripe_session_id) {
-          columns.push('stripe_session_id');
-          values.push(stripeSessionId);
-        }
-        if (supports.stripe_payment_intent_id) {
-          columns.push('stripe_payment_intent_id');
-          values.push(stripePaymentIntentId);
-        }
-        if (supports.payment_method) {
-          columns.push('payment_method');
-          values.push(paymentMethod);
-        }
-        if (supports.payment_status) {
-          columns.push('payment_status');
-          values.push(paymentStatus);
-        }
-
-        columns.push('carrier', 'shipment_date', 'created_at');
-        values.push(null, null, new Date());
-
-        const placeholders = columns.map(() => '?').join(', ');
-        const finalColumns = columns.join(', ');
-        const orderSql = `INSERT INTO orders (${finalColumns}) VALUES (${placeholders})`;
-
-        db.query(orderSql, values, function (orderErr, result) {
-          if (orderErr) {
+        insertOrderItems(orderId, items, function (itemsErr) {
+          if (itemsErr) {
             return db.rollback(function () {
-              callback(orderErr);
+              callback(itemsErr);
             });
           }
 
-          const orderId = result.insertId;
-
-          insertOrderItems(orderId, items, function (itemsErr) {
-            if (itemsErr) {
+          db.commit(function (commitErr) {
+            if (commitErr) {
               return db.rollback(function () {
-                callback(itemsErr);
+                callback(commitErr);
               });
             }
 
-            db.commit(function (commitErr) {
-              if (commitErr) {
-                return db.rollback(function () {
-                  callback(commitErr);
-                });
-              }
-
-              callback(null, { id: orderId, invoiceNumber: invoiceNumber });
-            });
+            callback(null, { id: orderId, invoiceNumber: invoiceNumber });
           });
         });
       });
@@ -215,13 +155,7 @@ const Orders = {
       return callback(new Error('User id is required to fetch orders'));
     }
 
-    detectOrderColumns(function (detectErr, supports) {
-      if (detectErr) {
-        return callback(detectErr);
-      }
-
-      const sql = supports.stripe_session_id || supports.stripe_payment_intent_id || supports.payment_method || supports.payment_status
-        ? `
+    const sql = `
       SELECT
         o.id AS order_id,
         o.invoice_number,
@@ -233,34 +167,9 @@ const Orders = {
         o.shipment_date,
         o.paypal_order_id,
         o.paypal_capture_id,
-        ${supports.stripe_session_id ? 'o.stripe_session_id,' : ''}
-        ${supports.stripe_payment_intent_id ? 'o.stripe_payment_intent_id,' : ''}
-        ${supports.payment_method ? 'o.payment_method,' : ''}
-        ${supports.payment_status ? 'o.payment_status,' : ''}
-        o.created_at,
-        oi.id AS order_item_id,
-        oi.product_id,
-        oi.product_name,
-        oi.quantity,
-        oi.price,
-        oi.line_total
-      FROM orders o
-      LEFT JOIN order_items oi ON oi.order_id = o.id
-      WHERE o.user_id = ?
-      ORDER BY o.created_at ASC, oi.id ASC
-    `
-        : `
-      SELECT
-        o.id AS order_id,
-        o.invoice_number,
-        o.subtotal,
-        o.tax_amount,
-        o.total,
-        o.status,
-        o.carrier,
-        o.shipment_date,
-        o.paypal_order_id,
-        o.paypal_capture_id,
+        o.stripe_session_id,
+        o.stripe_payment_intent_id,
+        o.payment_method,
         o.created_at,
         oi.id AS order_item_id,
         oi.product_id,
@@ -274,64 +183,56 @@ const Orders = {
       ORDER BY o.created_at ASC, oi.id ASC
     `;
 
-      db.query(sql, [userId], function (err, rows) {
-        if (err) {
-          return callback(err);
+    db.query(sql, [userId], function (err, rows) {
+      if (err) {
+        return callback(err);
+      }
+
+      const grouped = [];
+      const orderMap = new Map();
+
+      (rows || []).forEach((row) => {
+        let order = orderMap.get(row.order_id);
+        if (!order) {
+          order = {
+            id: row.order_id,
+            invoiceNumber: row.invoice_number,
+            subtotal: row.subtotal != null ? Number(row.subtotal) : 0,
+            taxAmount: row.tax_amount != null ? Number(row.tax_amount) : 0,
+            total: row.total != null ? Number(row.total) : 0,
+            status: row.status || 'On Hold',
+            carrier: row.carrier || null,
+            shipment_date: row.shipment_date || null,
+            paypal_order_id: row.paypal_order_id,
+            paypal_capture_id: row.paypal_capture_id,
+            stripe_session_id: row.stripe_session_id,
+            stripe_payment_intent_id: row.stripe_payment_intent_id,
+            payment_method: row.payment_method || null,
+            createdAt: row.created_at,
+            items: []
+          };
+          orderMap.set(row.order_id, order);
+          grouped.push(order);
         }
 
-        const grouped = [];
-        const orderMap = new Map();
-
-        (rows || []).forEach((row) => {
-          let order = orderMap.get(row.order_id);
-          if (!order) {
-            order = {
-              id: row.order_id,
-              invoiceNumber: row.invoice_number,
-              subtotal: row.subtotal != null ? Number(row.subtotal) : 0,
-              taxAmount: row.tax_amount != null ? Number(row.tax_amount) : 0,
-              total: row.total != null ? Number(row.total) : 0,
-              status: row.status || 'On Hold',
-              carrier: row.carrier || null,
-              shipment_date: row.shipment_date || null,
-              paypal_order_id: row.paypal_order_id,
-              paypal_capture_id: row.paypal_capture_id,
-              stripe_session_id: row.stripe_session_id || null,
-              stripe_payment_intent_id: row.stripe_payment_intent_id || null,
-              payment_method: row.payment_method || null,
-              payment_status: row.payment_status || null,
-              createdAt: row.created_at,
-              items: []
-            };
-            orderMap.set(row.order_id, order);
-            grouped.push(order);
-          }
-
-          if (row.order_item_id) {
-            order.items.push({
-              id: row.order_item_id,
-              product_id: row.product_id,
-              productName: row.product_name,
-              quantity: row.quantity != null ? Number(row.quantity) : 0,
-              price: row.price != null ? Number(row.price) : 0,
-              lineTotal: row.line_total != null ? Number(row.line_total) : 0
-            });
-          }
-        });
-
-        callback(null, grouped);
+        if (row.order_item_id) {
+          order.items.push({
+            id: row.order_item_id,
+            product_id: row.product_id,
+            productName: row.product_name,
+            quantity: row.quantity != null ? Number(row.quantity) : 0,
+            price: row.price != null ? Number(row.price) : 0,
+            lineTotal: row.line_total != null ? Number(row.line_total) : 0
+          });
+        }
       });
+
+      callback(null, grouped);
     });
   },
 
   getAllWithItems(callback) {
-    detectOrderColumns(function (detectErr, supports) {
-      if (detectErr) {
-        return callback(detectErr);
-      }
-
-      const sql = supports.stripe_session_id || supports.stripe_payment_intent_id || supports.payment_method || supports.payment_status
-        ? `
+    const sql = `
       SELECT
         o.id AS order_id,
         o.user_id,
@@ -344,40 +245,13 @@ const Orders = {
         o.shipment_date,
         o.paypal_order_id,
         o.paypal_capture_id,
-        ${supports.stripe_session_id ? 'o.stripe_session_id,' : ''}
-        ${supports.stripe_payment_intent_id ? 'o.stripe_payment_intent_id,' : ''}
-        ${supports.payment_method ? 'o.payment_method,' : ''}
-        ${supports.payment_status ? 'o.payment_status,' : ''}
+        o.stripe_session_id,
+        o.stripe_payment_intent_id,
+        o.payment_method,
         o.created_at,
         u.username,
         u.email,
-        oi.id AS order_item_id,
-        oi.product_id,
-        oi.product_name,
-        oi.quantity,
-        oi.price,
-        oi.line_total
-      FROM orders o
-      LEFT JOIN users u ON u.id = o.user_id
-      LEFT JOIN order_items oi ON oi.order_id = o.id
-      ORDER BY o.created_at ASC, oi.id ASC
-    `
-        : `
-      SELECT
-        o.id AS order_id,
-        o.user_id,
-        o.invoice_number,
-        o.subtotal,
-        o.tax_amount,
-        o.total,
-        o.status,
-        o.carrier,
-        o.shipment_date,
-        o.paypal_order_id,
-        o.paypal_capture_id,
-        o.created_at,
-        u.username,
-        u.email,
+        u.contact,
         oi.id AS order_item_id,
         oi.product_id,
         oi.product_name,
@@ -390,56 +264,55 @@ const Orders = {
       ORDER BY o.created_at ASC, oi.id ASC
     `;
 
-      db.query(sql, function (err, rows) {
-        if (err) {
-          return callback(err);
+    db.query(sql, function (err, rows) {
+      if (err) {
+        return callback(err);
+      }
+
+      const grouped = [];
+      const orderMap = new Map();
+
+      (rows || []).forEach((row) => {
+        let order = orderMap.get(row.order_id);
+        if (!order) {
+          order = {
+            id: row.order_id,
+            user_id: row.user_id,
+            invoice_number: row.invoice_number,
+            subtotal: row.subtotal != null ? Number(row.subtotal) : 0,
+            taxAmount: row.tax_amount != null ? Number(row.tax_amount) : 0,
+            total: row.total != null ? Number(row.total) : 0,
+            status: row.status || 'On Hold',
+            carrier: row.carrier || null,
+            shipment_date: row.shipment_date || null,
+            paypal_order_id: row.paypal_order_id,
+            paypal_capture_id: row.paypal_capture_id,
+            stripe_session_id: row.stripe_session_id,
+            stripe_payment_intent_id: row.stripe_payment_intent_id,
+            payment_method: row.payment_method || null,
+            created_at: row.created_at,
+            username: row.username,
+            email: row.email,
+            contact: row.contact || null,
+            items: []
+          };
+          orderMap.set(row.order_id, order);
+          grouped.push(order);
         }
 
-        const grouped = [];
-        const orderMap = new Map();
-
-        (rows || []).forEach((row) => {
-          let order = orderMap.get(row.order_id);
-          if (!order) {
-            order = {
-              id: row.order_id,
-              user_id: row.user_id,
-              invoice_number: row.invoice_number,
-              subtotal: row.subtotal != null ? Number(row.subtotal) : 0,
-              taxAmount: row.tax_amount != null ? Number(row.tax_amount) : 0,
-              total: row.total != null ? Number(row.total) : 0,
-              status: row.status || 'On Hold',
-              carrier: row.carrier || null,
-              shipment_date: row.shipment_date || null,
-              paypal_order_id: row.paypal_order_id,
-              paypal_capture_id: row.paypal_capture_id,
-              stripe_session_id: row.stripe_session_id || null,
-              stripe_payment_intent_id: row.stripe_payment_intent_id || null,
-              payment_method: row.payment_method || null,
-              payment_status: row.payment_status || null,
-              created_at: row.created_at,
-              username: row.username,
-              email: row.email,
-              items: []
-            };
-            orderMap.set(row.order_id, order);
-            grouped.push(order);
-          }
-
-          if (row.order_item_id) {
-            order.items.push({
-              id: row.order_item_id,
-              product_id: row.product_id,
-              product_name: row.product_name,
-              quantity: row.quantity != null ? Number(row.quantity) : 0,
-              price: row.price != null ? Number(row.price) : 0,
-              line_total: row.line_total != null ? Number(row.line_total) : 0
-            });
-          }
-        });
-
-        callback(null, grouped);
+        if (row.order_item_id) {
+          order.items.push({
+            id: row.order_item_id,
+            product_id: row.product_id,
+            product_name: row.product_name,
+            quantity: row.quantity != null ? Number(row.quantity) : 0,
+            price: row.price != null ? Number(row.price) : 0,
+            line_total: row.line_total != null ? Number(row.line_total) : 0
+          });
+        }
       });
+
+      callback(null, grouped);
     });
   },
 
@@ -448,13 +321,7 @@ const Orders = {
       return callback(new Error('Order id is required to fetch order'));
     }
 
-    detectOrderColumns(function (detectErr, supports) {
-      if (detectErr) {
-        return callback(detectErr);
-      }
-
-      const sql = supports.stripe_session_id || supports.stripe_payment_intent_id || supports.payment_method || supports.payment_status
-        ? `
+    const sql = `
       SELECT
         o.id AS order_id,
         o.user_id,
@@ -467,37 +334,9 @@ const Orders = {
         o.shipment_date,
         o.paypal_order_id,
         o.paypal_capture_id,
-        ${supports.stripe_session_id ? 'o.stripe_session_id,' : ''}
-        ${supports.stripe_payment_intent_id ? 'o.stripe_payment_intent_id,' : ''}
-        ${supports.payment_method ? 'o.payment_method,' : ''}
-        ${supports.payment_status ? 'o.payment_status,' : ''}
-        o.created_at,
-        u.username,
-        u.email,
-        oi.id AS order_item_id,
-        oi.product_id,
-        oi.product_name,
-        oi.quantity,
-        oi.price,
-        oi.line_total
-      FROM orders o
-      LEFT JOIN users u ON u.id = o.user_id
-      LEFT JOIN order_items oi ON oi.order_id = o.id
-      WHERE o.id = ?
-    `
-        : `
-      SELECT
-        o.id AS order_id,
-        o.user_id,
-        o.invoice_number,
-        o.subtotal,
-        o.tax_amount,
-        o.total,
-        o.status,
-        o.carrier,
-        o.shipment_date,
-        o.paypal_order_id,
-        o.paypal_capture_id,
+        o.stripe_session_id,
+        o.stripe_payment_intent_id,
+        o.payment_method,
         o.created_at,
         u.username,
         u.email,
@@ -513,52 +352,50 @@ const Orders = {
       WHERE o.id = ?
     `;
 
-      db.query(sql, [orderId], function (err, rows) {
-        if (err) {
-          return callback(err);
+    db.query(sql, [orderId], function (err, rows) {
+      if (err) {
+        return callback(err);
+      }
+
+      if (!rows || rows.length === 0) {
+        return callback(null, null);
+      }
+
+      const base = {
+        id: rows[0].order_id,
+        user_id: rows[0].user_id,
+        invoice_number: rows[0].invoice_number,
+        subtotal: rows[0].subtotal != null ? Number(rows[0].subtotal) : 0,
+        taxAmount: rows[0].tax_amount != null ? Number(rows[0].tax_amount) : 0,
+        total: rows[0].total != null ? Number(rows[0].total) : 0,
+        created_at: rows[0].created_at,
+        status: rows[0].status || 'On Hold',
+        carrier: rows[0].carrier || null,
+        shipment_date: rows[0].shipment_date || null,
+        paypal_order_id: rows[0].paypal_order_id,
+        paypal_capture_id: rows[0].paypal_capture_id,
+        stripe_session_id: rows[0].stripe_session_id,
+        stripe_payment_intent_id: rows[0].stripe_payment_intent_id,
+        payment_method: rows[0].payment_method || null,
+        username: rows[0].username,
+        email: rows[0].email,
+        items: []
+      };
+
+      rows.forEach((row) => {
+        if (row.order_item_id) {
+          base.items.push({
+            id: row.order_item_id,
+            product_id: row.product_id,
+            product_name: row.product_name,
+            quantity: row.quantity != null ? Number(row.quantity) : 0,
+            price: row.price != null ? Number(row.price) : 0,
+            line_total: row.line_total != null ? Number(row.line_total) : 0
+          });
         }
-
-        if (!rows || rows.length === 0) {
-          return callback(null, null);
-        }
-
-        const base = {
-          id: rows[0].order_id,
-          user_id: rows[0].user_id,
-          invoice_number: rows[0].invoice_number,
-          subtotal: rows[0].subtotal != null ? Number(rows[0].subtotal) : 0,
-          taxAmount: rows[0].tax_amount != null ? Number(rows[0].tax_amount) : 0,
-          total: rows[0].total != null ? Number(rows[0].total) : 0,
-          created_at: rows[0].created_at,
-          status: rows[0].status || 'On Hold',
-          carrier: rows[0].carrier || null,
-          shipment_date: rows[0].shipment_date || null,
-          paypal_order_id: rows[0].paypal_order_id,
-          paypal_capture_id: rows[0].paypal_capture_id,
-          stripe_session_id: rows[0].stripe_session_id || null,
-          stripe_payment_intent_id: rows[0].stripe_payment_intent_id || null,
-          payment_method: rows[0].payment_method || null,
-          payment_status: rows[0].payment_status || null,
-          username: rows[0].username,
-          email: rows[0].email,
-          items: []
-        };
-
-        rows.forEach((row) => {
-          if (row.order_item_id) {
-            base.items.push({
-              id: row.order_item_id,
-              product_id: row.product_id,
-              product_name: row.product_name,
-              quantity: row.quantity != null ? Number(row.quantity) : 0,
-              price: row.price != null ? Number(row.price) : 0,
-              line_total: row.line_total != null ? Number(row.line_total) : 0
-            });
-          }
-        });
-
-        callback(null, base);
       });
+
+      callback(null, base);
     });
   },
 
@@ -579,91 +416,79 @@ const Orders = {
 
   getByStripeSessionId(sessionId, callback) {
     if (!sessionId) {
-      return callback(new Error('Stripe session id is required'));
+      return callback(new Error('Stripe session id is required to fetch order'));
     }
-    detectOrderColumns(function (detectErr, supports) {
-      if (detectErr) {
-        return callback(detectErr);
+
+    const sql = `
+      SELECT
+        o.id AS order_id,
+        o.user_id,
+        o.invoice_number,
+        o.subtotal,
+        o.tax_amount,
+        o.total,
+        o.status,
+        o.carrier,
+        o.shipment_date,
+        o.paypal_order_id,
+        o.paypal_capture_id,
+        o.stripe_session_id,
+        o.stripe_payment_intent_id,
+        o.payment_method,
+        o.created_at,
+        oi.id AS order_item_id,
+        oi.product_id,
+        oi.product_name,
+        oi.quantity,
+        oi.price,
+        oi.line_total
+      FROM orders o
+      LEFT JOIN order_items oi ON oi.order_id = o.id
+      WHERE o.stripe_session_id = ?
+    `;
+
+    db.query(sql, [sessionId], function (err, rows) {
+      if (err) {
+        return callback(err);
       }
 
-      if (!supports.stripe_session_id) {
+      if (!rows || rows.length === 0) {
         return callback(null, null);
       }
 
-      const sql = `
-        SELECT
-          id,
-          user_id,
-          invoice_number,
-          subtotal,
-          tax_amount,
-          total,
-          status,
-          carrier,
-          shipment_date,
-          paypal_order_id,
-          paypal_capture_id,
-          stripe_session_id,
-          stripe_payment_intent_id,
-          payment_method,
-          payment_status,
-          created_at
-        FROM orders
-        WHERE stripe_session_id = ?
-        LIMIT 1
-      `;
+      const base = {
+        id: rows[0].order_id,
+        user_id: rows[0].user_id,
+        invoice_number: rows[0].invoice_number,
+        subtotal: rows[0].subtotal != null ? Number(rows[0].subtotal) : 0,
+        taxAmount: rows[0].tax_amount != null ? Number(rows[0].tax_amount) : 0,
+        total: rows[0].total != null ? Number(rows[0].total) : 0,
+        created_at: rows[0].created_at,
+        status: rows[0].status || 'On Hold',
+        carrier: rows[0].carrier || null,
+        shipment_date: rows[0].shipment_date || null,
+        paypal_order_id: rows[0].paypal_order_id,
+        paypal_capture_id: rows[0].paypal_capture_id,
+        stripe_session_id: rows[0].stripe_session_id,
+        stripe_payment_intent_id: rows[0].stripe_payment_intent_id,
+        payment_method: rows[0].payment_method || null,
+        items: []
+      };
 
-      db.query(sql, [sessionId], function (err, rows) {
-        if (err) {
-          return callback(err);
+      rows.forEach((row) => {
+        if (row.order_item_id) {
+          base.items.push({
+            id: row.order_item_id,
+            product_id: row.product_id,
+            product_name: row.product_name,
+            quantity: row.quantity != null ? Number(row.quantity) : 0,
+            price: row.price != null ? Number(row.price) : 0,
+            line_total: row.line_total != null ? Number(row.line_total) : 0
+          });
         }
-        if (!rows || rows.length === 0) {
-          return callback(null, null);
-        }
-        callback(null, rows[0]);
       });
-    });
-  },
 
-  getLatestByUserAndMethod(userId, paymentMethod, callback) {
-    if (!userId) {
-      return callback(new Error('User id is required'));
-    }
-    detectOrderColumns(function (detectErr, supports) {
-      if (detectErr) {
-        return callback(detectErr);
-      }
-
-      if (!supports.payment_method) {
-        return callback(null, null);
-      }
-
-      const sql = `
-        SELECT
-          id,
-          user_id,
-          invoice_number,
-          subtotal,
-          tax_amount,
-          total,
-          status,
-          payment_method,
-          created_at
-        FROM orders
-        WHERE user_id = ? AND payment_method = ?
-        ORDER BY created_at DESC
-        LIMIT 1
-      `;
-
-      db.query(sql, [userId, paymentMethod], function (err, rows) {
-        if (err) {
-          return callback(err);
-        }
-        if (!rows || rows.length === 0) {
-          return callback(null, null);
-        }
-        callback(null, rows[0]);
-      });
+      callback(null, base);
     });
   }
 };

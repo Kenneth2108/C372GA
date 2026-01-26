@@ -4,7 +4,8 @@ const userCtrl = require('./controllers/userController');
 const checkoutCtrl = require('./controllers/checkoutController');
 const paymentCtrl = require('./controllers/paymentController');
 const stripeCtrl = require('./controllers/stripeController');
-const paypalRefundCtrl = require('./controllers/paypalRefundController');
+const paypalRefundCtrl = require('./controllers/paypalstripeRefundController');
+const reportsCtrl = require('./controllers/adminReportsController');
 const adminRefundsCtrl = require('./controllers/adminRefundsController');
 const refundCtrl = require('./controllers/refundController');
 const orderCtrl = require('./controllers/orderController');
@@ -111,6 +112,7 @@ app.get('/admin/orders/:id/refund', checkAuthenticated, checkAdmin, paypalRefund
 app.post('/admin/orders/:id/refund', checkAuthenticated, checkAdmin, paypalRefundCtrl.refund);
 app.get('/admin/refunds', checkAuthenticated, checkAdmin, adminRefundsCtrl.list);
 app.get('/admin/refunds/:id', checkAuthenticated, checkAdmin, adminRefundsCtrl.details);
+app.get('/admin/reports/sales', checkAuthenticated, checkAdmin, reportsCtrl.salesReport);
 
 //(Kenneth End) 
 

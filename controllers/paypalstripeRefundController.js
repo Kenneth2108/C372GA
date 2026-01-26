@@ -1,9 +1,7 @@
 const orderModel = require("../models/orderModel");
 const refundModel = require("../models/refundModel");
-const orderItemModel = require("../models/orderItemModel");
 const productModel = require("../models/productModel");
 const refundItemModel = require("../models/refundItemModel");
-const refundInvoiceEmailService = require("../services/refundInvoiceEmailService");
 const paypalRefund = require("../services/paypalRefund");
 const stripeRefund = require("../services/stripeRefund");
 
@@ -12,9 +10,46 @@ function view(res, name, data = {}) {
 }
 
 function popMessages(req) {
-  return Array.isArray(req.session.messages)
-    ? req.session.messages.splice(0)
+  const messages = Array.isArray(req.session.messages)
+    ? [...req.session.messages]
     : [];
+  req.session.messages = [];
+  return messages;
+}
+
+function formatPaypalError(result) {
+  const data = result && result.data ? result.data : {};
+  const messageParts = [];
+  if (data.message) {
+    messageParts.push(String(data.message));
+  }
+  if (data.name) {
+    messageParts.push(`(${data.name})`);
+  }
+  if (Array.isArray(data.details) && data.details.length) {
+    const detailText = data.details
+      .map((detail) => {
+        if (!detail) return null;
+        const issue = detail.issue ? String(detail.issue) : '';
+        const description = detail.description ? String(detail.description) : '';
+        if (issue && description) return `${issue}: ${description}`;
+        return issue || description || null;
+      })
+      .filter(Boolean);
+    if (detailText.length) {
+      messageParts.push(detailText.join(' | '));
+    }
+  }
+  if (data.debug_id) {
+    messageParts.push(`Debug ID: ${data.debug_id}`);
+  }
+  const message = messageParts.join(' ').trim();
+  return message || 'PayPal refund failed.';
+}
+
+function parsePaypalAmount(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
 }
 
 module.exports = {
@@ -30,27 +65,33 @@ module.exports = {
       if (err) return res.status(500).send("Database error");
       if (!order) return res.redirect("/admin/orders");
 
-      orderItemModel.getByOrder(orderId, (err2, items = []) => {
-        if (err2) return res.status(500).send("Database error");
+      const paymentMethod = String(order.payment_method || order.paymentMethod || "").toLowerCase();
+      const isStripeOrder = paymentMethod === "stripe";
 
-        refundItemModel.getRefundedByOrder(orderId, (err3, refundedMap = {}) => {
-          if (err3) return res.status(500).send("Database error");
+      refundModel.getTotalForOrder(orderId, (sumErr, refundedAmount) => {
+        if (sumErr) return res.status(500).send("Database error");
+
+        refundItemModel.getRefundedByOrder(orderId, async (itemsErr, refundedMap = {}) => {
+          if (itemsErr) return res.status(500).send("Database error");
 
           const total = Number(order.total || 0);
           const subtotal = Number(order.subtotal || 0);
-          const refundedAmount = Number(order.refundedAmount || 0);
-          const remainingAmount = Number((total - refundedAmount).toFixed(2));
+          const remainingAmount = Number((total - Number(refundedAmount || 0)).toFixed(2));
           const priceMultiplier = subtotal > 0 ? total / subtotal : 1;
+          const items = Array.isArray(order.items) ? order.items : [];
 
           const orderItems = items.map((item) => {
-            const refundedQty = Number(refundedMap[String(item.productId)] || 0);
             const orderedQty = Number(item.quantity || 0);
+            const refundedQty = Number(refundedMap[String(item.product_id || item.productId)] || 0);
             const remainingQty = Math.max(orderedQty - refundedQty, 0);
-            const basePrice = Number(item.unitPrice || 0);
+            const basePrice = Number(item.price || 0);
             const refundUnitPriceExact = basePrice * priceMultiplier;
             const refundUnitPrice = Number(refundUnitPriceExact.toFixed(2));
             return {
-              ...item,
+              productId: item.product_id || item.productId,
+              productName: item.product_name || item.productName,
+              quantity: orderedQty,
+              unitPrice: basePrice,
               refundedQty,
               remainingQty,
               refundUnitPrice,
@@ -59,7 +100,11 @@ module.exports = {
           });
 
           return view(res, "adminRefundOrder", {
-            order,
+            order: {
+              ...order,
+              invoiceNumber: order.invoiceNumber || order.invoice_number,
+              paymentMethod: paymentMethod
+            },
             orderItems,
             messages,
             remainingAmount: Number.isFinite(remainingAmount) ? remainingAmount : 0
@@ -81,48 +126,58 @@ module.exports = {
       : "";
     const isPartialRefund = refundType === "custom";
 
-    orderModel.getById(orderId, (err, order) => {
+    orderModel.getById(orderId, async (err, order) => {
       if (err) return res.status(500).send("Database error");
       if (!order) return res.redirect("/admin/orders");
 
-      const captureId = order.paypalCaptureId;
-      const paymentMethod = String(order.paymentMethod || "").toLowerCase();
-      const isPaypalOrder = paymentMethod === "paypal";
+      const paymentMethod = String(order.payment_method || order.paymentMethod || "").toLowerCase();
       const isStripeOrder = paymentMethod === "stripe";
+      const captureId = isStripeOrder
+        ? (order.stripe_payment_intent_id || order.stripePaymentIntentId)
+        : (order.paypal_capture_id || order.paypalCaptureId);
 
-      if ((!isPaypalOrder && !isStripeOrder) || !captureId) {
-        req.session.messages = ["This order does not have a supported payment ID."];
+      if (!captureId) {
+        req.session.messages = [
+          isStripeOrder
+            ? "This order does not have a Stripe payment intent ID."
+            : "This order does not have a PayPal capture ID."
+        ];
         return res.redirect(`/admin/orders/${orderId}/refund`);
       }
 
       const total = Number(order.total);
-      const refundedAmount = Number(order.refundedAmount || 0);
-      const remainingAmount = Number((total - refundedAmount).toFixed(2));
       if (!Number.isFinite(total) || total <= 0) {
         req.session.messages = ["Invalid order total for refund."];
         return res.redirect(`/admin/orders/${orderId}/refund`);
       }
 
-      if (!Number.isFinite(remainingAmount) || remainingAmount <= 0) {
-        req.session.messages = ["No refundable balance remaining."];
-        return res.redirect(`/admin/orders/${orderId}/refund`);
-      }
+      refundModel.getTotalForOrder(orderId, async (sumErr, refundedAmount) => {
+        if (sumErr) {
+          return res.status(500).send("Database error");
+        }
 
-      orderItemModel.getByOrder(orderId, (err2, items = []) => {
-        if (err2) return res.status(500).send("Database error");
+        const remainingAmount = Number((total - Number(refundedAmount || 0)).toFixed(2));
+        if (!Number.isFinite(remainingAmount) || remainingAmount <= 0) {
+          req.session.messages = ["No refundable balance remaining."];
+          return res.redirect(`/admin/orders/${orderId}/refund`);
+        }
 
-        refundItemModel.getRefundedByOrder(orderId, async (err3, refundedMap = {}) => {
-          if (err3) return res.status(500).send("Database error");
+        refundItemModel.getRefundedByOrder(orderId, async (itemsErr, refundedMap = {}) => {
+          if (itemsErr) {
+            return res.status(500).send("Database error");
+          }
+
+          const items = Array.isArray(order.items) ? order.items : [];
+          const subtotal = Number(order.subtotal || 0);
+          const priceMultiplier = subtotal > 0 ? total / subtotal : 1;
+          const itemMap = new Map(
+            items.map((item) => [String(item.product_id || item.productId), item])
+          );
 
           let requestedAmount = 0;
           const restockItems = [];
-          const refundItems = [];
-          const subtotal = Number(order.subtotal || 0);
-          const total = Number(order.total || 0);
-          const priceMultiplier = subtotal > 0 ? total / subtotal : 1;
-          const itemMap = new Map(
-            items.map((item) => [String(item.productId), item])
-          );
+          const refundSelections = [];
+          let isFullSelection = true;
 
           if (isPartialRefund) {
             const rawProductIds = [].concat(req.body.refundProductId || []);
@@ -130,7 +185,6 @@ module.exports = {
             const rawNoRestockQtys = [].concat(req.body.refundQtyNoRestock || []);
             let isValid = rawProductIds.length === rawRestockQtys.length
               && rawProductIds.length === rawNoRestockQtys.length;
-            let isFullSelection = true;
 
             rawProductIds.forEach((productId, index) => {
               if (!isValid) return;
@@ -141,7 +195,7 @@ module.exports = {
               }
 
               const orderedQty = Number(orderItem.quantity) || 0;
-              const refundedQty = Number(refundedMap[String(orderItem.productId)] || 0);
+              const refundedQty = Number(refundedMap[String(productId)] || 0);
               const remainingQty = Math.max(orderedQty - refundedQty, 0);
               const restockQty = Number(rawRestockQtys[index]) || 0;
               const noRestockQty = Number(rawNoRestockQtys[index]) || 0;
@@ -160,15 +214,15 @@ module.exports = {
               }
 
               if (totalQty > 0) {
-                const basePrice = Number(orderItem.unitPrice) || 0;
+                const basePrice = Number(orderItem.price) || 0;
                 const refundUnitPriceExact = basePrice * priceMultiplier;
                 const refundUnitPrice = Number(refundUnitPriceExact.toFixed(2));
                 requestedAmount += refundUnitPriceExact * totalQty;
                 if (restockQty > 0) {
-                  restockItems.push({ id: orderItem.productId, quantity: restockQty });
+                  restockItems.push({ id: orderItem.product_id || orderItem.productId, quantity: restockQty });
                 }
-                refundItems.push({
-                  productId: orderItem.productId,
+                refundSelections.push({
+                  productId: orderItem.product_id || orderItem.productId,
                   quantity: totalQty,
                   unitPrice: refundUnitPrice
                 });
@@ -179,29 +233,36 @@ module.exports = {
               ? remainingAmount
               : Number(requestedAmount.toFixed(2));
 
-            if (!isValid || refundItems.length === 0) {
+            if (!isValid || refundSelections.length === 0) {
               req.session.messages = ["Select valid quantities for a partial refund."];
               return res.redirect(`/admin/orders/${orderId}/refund`);
             }
           } else {
-            requestedAmount = remainingAmount;
             items.forEach((item) => {
               const orderedQty = Number(item.quantity) || 0;
-              const refundedQty = Number(refundedMap[String(item.productId)] || 0);
+              const refundedQty = Number(refundedMap[String(item.product_id || item.productId)] || 0);
               const remainingQty = Math.max(orderedQty - refundedQty, 0);
               if (remainingQty > 0) {
-                const basePrice = Number(item.unitPrice) || 0;
-                const refundUnitPrice = Number((basePrice * priceMultiplier).toFixed(2));
+                const basePrice = Number(item.price) || 0;
+                const refundUnitPriceExact = basePrice * priceMultiplier;
+                const refundUnitPrice = Number(refundUnitPriceExact.toFixed(2));
+                requestedAmount += refundUnitPriceExact * remainingQty;
                 if (refundType === "full_restock") {
-                  restockItems.push({ id: item.productId, quantity: remainingQty });
+                  restockItems.push({ id: item.product_id || item.productId, quantity: remainingQty });
                 }
-                refundItems.push({
-                  productId: item.productId,
+                refundSelections.push({
+                  productId: item.product_id || item.productId,
                   quantity: remainingQty,
                   unitPrice: refundUnitPrice
                 });
               }
             });
+
+            if (refundSelections.length === 0) {
+              req.session.messages = ["No refundable items remaining."];
+              return res.redirect(`/admin/orders/${orderId}/refund`);
+            }
+            requestedAmount = remainingAmount;
           }
 
           if (!Number.isFinite(requestedAmount) || requestedAmount <= 0) {
@@ -215,115 +276,121 @@ module.exports = {
           }
 
           try {
-            let refundData = {};
-            let refundStatus = "COMPLETED";
-            let createdAt = new Date();
-            let paypalRefundId = null;
-
             if (isStripeOrder) {
               const refund = await stripeRefund.refundPaymentIntent(captureId, requestedAmount);
-              refundData = refund || {};
-              refundStatus = refundData.status
-                ? String(refundData.status).toUpperCase()
-                : "COMPLETED";
-              createdAt = refundData.created ? new Date(refundData.created * 1000) : new Date();
-              paypalRefundId = refundData.id || null;
-            } else {
-              const result = await paypalRefund.refundCapture(captureId, requestedAmount, "SGD");
-              if (!(result.status >= 200 && result.status < 300)) {
-                const errorInfo = result.data && result.data.message
-                  ? result.data.message
-                  : "PayPal refund failed.";
-                req.session.messages = [errorInfo];
-                return res.redirect(`/admin/orders/${orderId}/refund`);
-              }
-              refundData = result.data || {};
-              refundStatus = refundData.status || "COMPLETED";
-              paypalRefundId = refundData.id || null;
-              createdAt = refundData.create_time
-                ? new Date(refundData.create_time)
+              const createdAt = refund && refund.created
+                ? new Date(refund.created * 1000)
                 : new Date();
-            }
 
-            refundModel.create(orderId, {
-              amount: requestedAmount,
-              currency: "SGD",
-              status: refundStatus,
-              paypalRefundId,
-              paypalCaptureId: captureId,
-              createdAt,
-              refundReason
-            }, (err4, refundId) => {
-                if (err4) {
+              refundModel.create(orderId, {
+                amount: requestedAmount,
+                currency: (refund && refund.currency) ? String(refund.currency).toUpperCase() : "SGD",
+                status: refund && refund.status ? String(refund.status).toUpperCase() : "COMPLETED",
+                paypalRefundId: refund && refund.id ? String(refund.id) : null,
+                paypalCaptureId: captureId,
+                createdAt,
+                refundReason
+              }, (err2, refundId) => {
+                if (err2) {
                   req.session.messages = ["Refund sent, but failed to store history."];
                   return res.redirect("/admin/orders");
                 }
 
-                refundItemModel.createMany(refundId, orderId, refundItems, (err5) => {
-                  if (err5) {
+                refundItemModel.createMany(refundId, orderId, refundSelections, (err3) => {
+                  if (err3) {
                     req.session.messages = ["Refund sent, but failed to store item history."];
                     return res.redirect("/admin/orders");
                   }
 
-                  orderModel.addRefundedAmount(orderId, requestedAmount, (err6) => {
-                    if (err6) {
-                      req.session.messages = ["Refund sent, but failed to store balance."];
+                  if (!restockItems.length) {
+                    return res.redirect("/admin/orders");
+                  }
+
+                  productModel.increaseQuantities(restockItems, (err4) => {
+                    if (err4) {
+                      req.session.messages = ["Refund submitted, but failed to restock items."];
                       return res.redirect("/admin/orders");
                     }
-
-                    const sendRefundEmail = () => {
-                      // REFUND INVOICE EMAIL: send after successful refund.
-                      refundModel.getById(refundId, (err7, refundRecord) => {
-                        if (err7 || !refundRecord) {
-                          req.session.messages = ["Refund submitted to PayPal."];
-                          return res.redirect("/admin/orders");
-                        }
-                        const recipient = refundRecord.email;
-                        if (!recipient) {
-                          req.session.messages = ["Refund submitted to PayPal."];
-                          return res.redirect("/admin/orders");
-                        }
-                        refundItemModel.getByRefund(refundId, async (err8, refundItemsList = []) => {
-                          if (err8) {
-                            req.session.messages = ["Refund submitted to PayPal."];
-                            return res.redirect("/admin/orders");
-                          }
-                          try {
-                            console.log("Refund email auto-send to:", recipient);
-                            const info = await refundInvoiceEmailService.sendRefundInvoiceEmail({
-                              refund: refundRecord,
-                              refundItems: refundItemsList,
-                              to: recipient
-                            });
-                            console.log("Refund email auto-send result:", info && info.messageId ? info.messageId : info);
-                          } catch (emailError) {
-                            console.error("Refund email error:", emailError);
-                          }
-                          req.session.messages = ["Refund submitted to PayPal."];
-                          return res.redirect("/admin/orders");
-                        });
-                      });
-                    };
-
-                    if (!restockItems.length) {
-                      sendRefundEmail();
-                      return;
-                    }
-
-                    productModel.increaseQuantities(restockItems, (err7) => {
-                      if (err7) {
-                        req.session.messages = ["Refund submitted, but failed to restock items."];
-                        return res.redirect("/admin/orders");
-                      }
-                      sendRefundEmail();
-                    });
+                    return res.redirect("/admin/orders");
                   });
                 });
               });
-            return;
+              return;
+            }
+
+            const captureDetails = await paypalRefund.getCaptureDetails(captureId);
+            if (captureDetails.status >= 200 && captureDetails.status < 300) {
+              const data = captureDetails.data || {};
+              const captureAmount = parsePaypalAmount(data.amount && data.amount.value);
+              const refundedAmount = parsePaypalAmount(
+                data.seller_receivable_breakdown
+                  && data.seller_receivable_breakdown.total_refunded_amount
+                  && data.seller_receivable_breakdown.total_refunded_amount.value
+              );
+              if (Number.isFinite(captureAmount)) {
+                const refunded = Number.isFinite(refundedAmount) ? refundedAmount : 0;
+                const remainingCapture = Number((captureAmount - refunded).toFixed(2));
+                if (requestedAmount > remainingCapture) {
+                  req.session.messages = [
+                    `PayPal shows only $${remainingCapture.toFixed(2)} remaining for this capture.`
+                  ];
+                  return res.redirect(`/admin/orders/${orderId}/refund`);
+                }
+              }
+            }
+
+            const result = await paypalRefund.refundCapture(captureId, requestedAmount, "SGD");
+            if (result.status >= 200 && result.status < 300) {
+              const refundData = result.data || {};
+              const createdAt = refundData.create_time
+                ? new Date(refundData.create_time)
+                : new Date();
+
+              refundModel.create(orderId, {
+                amount: requestedAmount,
+                currency: "SGD",
+                status: refundData.status || "COMPLETED",
+                paypalRefundId: refundData.id,
+                paypalCaptureId: captureId,
+                createdAt,
+                refundReason
+              }, (err2, refundId) => {
+                if (err2) {
+                  req.session.messages = ["Refund sent, but failed to store history."];
+                  return res.redirect("/admin/orders");
+                }
+
+                refundItemModel.createMany(refundId, orderId, refundSelections, (err3) => {
+                  if (err3) {
+                    req.session.messages = ["Refund sent, but failed to store item history."];
+                    return res.redirect("/admin/orders");
+                  }
+
+                  if (!restockItems.length) {
+                    return res.redirect("/admin/orders");
+                  }
+
+                  productModel.increaseQuantities(restockItems, (err4) => {
+                    if (err4) {
+                      req.session.messages = ["Refund submitted, but failed to restock items."];
+                      return res.redirect("/admin/orders");
+                    }
+                    return res.redirect("/admin/orders");
+                  });
+                });
+              });
+              return;
+            }
+
+            console.error("PayPal refund error response:", {
+              status: result.status,
+              data: result.data
+            });
+            req.session.messages = [formatPaypalError(result)];
+            return res.redirect(`/admin/orders/${orderId}/refund`);
           } catch (error) {
             console.error("Refund error:", error);
-            req.session.messages = ["Refund failed."];
+            req.session.messages = [isStripeOrder ? "Stripe refund failed." : "PayPal refund failed."];
             return res.redirect(`/admin/orders/${orderId}/refund`);
           }
         });

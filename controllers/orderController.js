@@ -94,7 +94,10 @@ exports.showUserInvoice = function (req, res) {
       : (order.paypal_capture_id ? 'PayPal' : 'NETS');
 
     return res.render('checkout_invoice', {
-      user: userSession,
+      user: {
+        ...(userSession || {}),
+        contact: userSession && userSession.contact ? userSession.contact : null
+      },
       items,
       summary,
       invoiceMeta,
@@ -168,7 +171,8 @@ exports.showAdminInvoice = function (req, res) {
 
     const invoiceUser = {
       username: order.username || 'Customer',
-      email: order.email || ''
+      email: order.email || '',
+      contact: order.contact || ''
     };
 
     const rawPayment = order.payment_method || order.paymentMethod || '';

@@ -465,6 +465,7 @@
                  data-gst="<%= gstAmount.toFixed(2) %>"
                  data-total="<%= orderTotal.toFixed(2) %>"
                  data-payment="<%= order.payment_method ? String(order.payment_method).toUpperCase() : (order.paypal_capture_id ? 'PAYPAL' : 'NETS') %>"
+                 data-contact="<%= order.contact || '' %>"
                  data-link="/admin/orders/<%= order.id %>/invoice"
                  data-edit-link="/admin/orders/<%= order.id %>/edit"
                  data-refund-link="/admin/orders/<%= order.id %>/refund">
@@ -474,6 +475,9 @@
                   <span class="badge-pill mb-1"><%= order.invoice_number %></span>
                   <h5 class="mb-0"><%= order.username || 'Customer' %></h5>
                   <small class="text-muted"><%= order.email || '' %></small>
+                  <% if (order.contact) { %>
+                    <small class="text-muted d-block">Contact: <%= order.contact %></small>
+                  <% } %>
                 </div>
 
                 <div class="text-end">
@@ -578,6 +582,10 @@
             <div class="sidebar-label">Payment</div>
             <div class="sidebar-value" data-field="payment">-</div>
           </div>
+          <div class="sidebar-item">
+            <div class="sidebar-label">Contact</div>
+            <div class="sidebar-value" data-field="contact">-</div>
+          </div>
           <div class="sidebar-divider"></div>
           <div class="sidebar-cta">
             <a class="btn btn-outline-pink btn-sm w-100" data-field="link" href="#">View Invoice</a>
@@ -641,6 +649,7 @@
       gst:      sidebar.querySelector('[data-field="gst"]'),
       total:    sidebar.querySelector('[data-field="total"]'),
       payment: sidebar.querySelector('[data-field="payment"]'),
+      contact: sidebar.querySelector('[data-field="contact"]'),
       link:     sidebar.querySelector('[data-field="link"]'),
       editLink: sidebar.querySelector('[data-field="edit-link"]'),
       refundLink: sidebar.querySelector('[data-field="refund-link"]')
@@ -658,6 +667,9 @@
       fields.total.textContent    = '$' + (card.dataset.total    || '0.00');
       if (fields.payment) {
         fields.payment.textContent = card.dataset.payment || '-';
+      }
+      if (fields.contact) {
+        fields.contact.textContent = card.dataset.contact || '-';
       }
       if (fields.link) {
         fields.link.href = card.dataset.link || '#';

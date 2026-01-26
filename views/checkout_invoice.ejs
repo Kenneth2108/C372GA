@@ -110,6 +110,9 @@
         <div>
           <p class="fw-semibold mb-0"><%= user && user.username ? user.username : 'Customer' %></p>
           <p class="text-muted mb-0"><%= user && user.email ? user.email : '' %></p>
+          <% if (user && user.contact) { %>
+            <p class="text-muted mb-0">Contact: <%= user.contact %></p>
+          <% } %>
         </div>
       </div>
 

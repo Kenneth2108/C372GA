@@ -1,6 +1,7 @@
 const Stripe = require('stripe');
 const CartItems = require('../models/CartItem');
 const Orders = require('../models/orderModel');
+const stripeTax = require('../services/stripeTax');
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -45,7 +46,7 @@ function getBaseUrl(req) {
 }
 
 function buildStripeLineItems(items, summary) {
-  const lineItems = (items || []).map((item) => ({
+  return (items || []).map((item) => ({
     price_data: {
       currency: 'sgd',
       product_data: {
@@ -58,24 +59,6 @@ function buildStripeLineItems(items, summary) {
     },
     quantity: item.quantity || 1
   }));
-
-  if (summary && summary.taxAmount > 0) {
-    lineItems.push({
-      price_data: {
-        currency: 'sgd',
-        product_data: {
-          name: 'GST (9%)',
-          metadata: {
-            is_tax: 'true'
-          }
-        },
-        unit_amount: Math.round(summary.taxAmount * 100)
-      },
-      quantity: 1
-    });
-  }
-
-  return lineItems;
 }
 
 function waitForStripeOrder(sessionId, attempts, delayMs) {
@@ -208,12 +191,16 @@ exports.createCheckoutSession = function (req, res) {
 
     try {
       const lineItems = buildStripeLineItems(items, summary);
+      const taxRateId = await stripeTax.getOrCreateTaxRate();
       const baseUrl = getBaseUrl(req);
 
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',
         payment_method_types: ['card'],
-        line_items: lineItems,
+        line_items: lineItems.map((item) => ({
+          ...item,
+          tax_rates: taxRateId ? [taxRateId] : []
+        })),
         success_url: `${baseUrl}/checkout/stripe/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${baseUrl}/checkout/stripe/cancel`,
         client_reference_id: String(userId),
