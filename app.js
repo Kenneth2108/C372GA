@@ -137,10 +137,10 @@ app.get('/admin/products/:id/delete', checkAuthenticated, checkAdmin, productCtr
 app.post('/UserProducts/add/:id', checkAuthenticated, checkUser, CartItemsController.addFromUserProducts);
 
 /* ---------- NETS Checkout ---------- */
-app.post("/generateNETSQR", netsController.generateNETSQR);
-app.get("/nets-qr/success", netsController.renderSuccess);
-app.get("/nets-qr/fail", netsController.renderFail);
-app.get("/sse/payment-status/:txnRetrievalRef", netsController.ssePaymentStatus);
+app.post("/generateNETSQR", checkAuthenticated, checkUser, netsController.generateNETSQR);
+app.get("/nets-qr/success", checkAuthenticated, checkUser, netsController.renderSuccess);
+app.get("/nets-qr/fail", checkAuthenticated, checkUser, netsController.renderFail);
+app.get("/sse/payment-status/:txnRetrievalRef", checkAuthenticated, checkUser, netsController.ssePaymentStatus);
 //(Isaac End )
 
 

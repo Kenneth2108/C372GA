@@ -81,12 +81,12 @@ exports.generateNETSQR = function (req, res) {
     const summary = buildSummary(items);
     const invoiceMeta = buildInvoiceMeta();
 
+    
     // Save the "pending checkout" in session so success route can use it
     req.session.pendingCheckout = {
       items: items,
       summary: summary,
-      invoiceMeta: invoiceMeta,
-      paymentMethod: "nets"
+      invoiceMeta: invoiceMeta
     };
 
     // IMPORTANT: do not trust totals from the browser.
@@ -166,8 +166,7 @@ exports.renderSuccess = async function (req, res) {
         req.session.invoiceData = {
           items: pending.items,
           summary: pending.summary,
-          invoiceMeta: pending.invoiceMeta,
-          paymentMethod: pending.paymentMethod || "nets"
+          invoiceMeta: pending.invoiceMeta
         };
 
         // Mark txn as completed and clear pending checkout
