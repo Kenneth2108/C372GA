@@ -137,6 +137,39 @@
     #payment-status {
       min-height: 20px;
     }
+
+    .btn-stripe-custom {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 12px 24px;
+    background-color: #635bff; /* Stripe's signature blurple */
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-stripe-custom:hover:not(:disabled) {
+        background-color: #534bd9;
+        box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .btn-stripe-custom:disabled {
+        background-color: #a3acb9; /* Muted purple-grey for disabled state */
+        cursor: not-allowed;
+        opacity: 0.8;
+    }
+
+    .stripe-logo {
+        height: 20px; /* Adjust based on your image dimensions */
+        margin-right: 10px;
+        filter: brightness(0) invert(1); /* Forces the logo to be white if the source is dark */
+    }
   </style>
 </head>
 <body>
@@ -193,7 +226,9 @@
                   <span class="pill">Card</span>
                 </div>
                 <p class="text-muted mb-3">Pay securely with credit/debit card via Stripe Checkout.</p>
-                <button type="button" class="btn btn-outline-pink w-100" id="stripe-button" disabled>Pay with Stripe</button>
+                <button type="button" class="btn-stripe-custom" id="stripe-button" disabled>
+                    <img src="images/stripe-logo.png" alt="Stripe" class="stripe-logo">
+                </button>
                 <div id="stripe-status" class="text-danger small mt-2" role="alert"></div>
               </div>
             </div>
