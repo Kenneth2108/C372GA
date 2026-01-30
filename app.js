@@ -3,7 +3,6 @@ const express = require('express');
 const userCtrl = require('./controllers/userController');
 const checkoutCtrl = require('./controllers/checkoutController');
 const paymentCtrl = require('./controllers/paymentController');
-const stripeCtrl = require('./controllers/stripeController');
 const paypalRefundCtrl = require('./controllers/paypalstripeRefundController');
 const reportsCtrl = require('./controllers/adminReportsController');
 const adminRefundsCtrl = require('./controllers/adminRefundsController');
@@ -32,15 +31,16 @@ const {
   blockAdminFromUserPages,
   upload
 } = require('./middleware');
-// Stripe webhook needs raw body before urlencoded middleware
-app.post('/webhook/stripe', express.raw({ type: 'application/json' }), stripeCtrl.handleWebhook);
+
 // Register common middleware (views, static, session, flash)
 registerMiddleware(app);
 //(Kenneth End)
 
 
 //(Thrish Start)
+const stripeCtrl = require('./controllers/stripeController');
 const CartItemsController = require('./controllers/CartItemController');
+app.post('/webhook/stripe', express.raw({ type: 'application/json' }), stripeCtrl.handleWebhook);
 //(Thrish End)
 
 //(Kenneth Start 
@@ -48,9 +48,6 @@ const CartItemsController = require('./controllers/CartItemController');
 app.get('/checkout', checkAuthenticated, checkUser, paymentCtrl.showPaymentOptions);
 app.post('/checkout/paypal/create-order', checkAuthenticated, checkUser, paymentCtrl.createPaypalOrder);
 app.post('/checkout/paypal/capture', checkAuthenticated, checkUser, paymentCtrl.capturePaypalOrder);
-app.post('/checkout/stripe/create-session', checkAuthenticated, checkUser, stripeCtrl.createCheckoutSession);
-app.get('/checkout/stripe/success', checkAuthenticated, checkUser, stripeCtrl.handleSuccess);
-app.get('/checkout/stripe/cancel', checkAuthenticated, checkUser, stripeCtrl.handleCancel);
 app.get('/invoice', checkAuthenticated, checkUser, checkoutCtrl.showInvoice);
 app.get('/orders', checkAuthenticated, checkUser, orderCtrl.listUserOrders);
 app.get('/orders/:id/invoice', checkAuthenticated, checkUser, orderCtrl.showUserInvoice);
@@ -115,6 +112,12 @@ app.get('/admin/refunds/:id', checkAuthenticated, checkAdmin, adminRefundsCtrl.d
 app.get('/admin/reports/sales', checkAuthenticated, checkAdmin, reportsCtrl.salesReport);
 
 //(Kenneth End) 
+
+// Thrish Start
+app.post('/checkout/stripe/create-session', checkAuthenticated, checkUser, stripeCtrl.createCheckoutSession);
+app.get('/checkout/stripe/success', checkAuthenticated, checkUser, stripeCtrl.handleSuccess);
+app.get('/checkout/stripe/cancel', checkAuthenticated, checkUser, stripeCtrl.handleCancel);
+// Thrish End
 
 //(Isaac Start )
 /* ---------- Storefront: all products (public) ---------- */
