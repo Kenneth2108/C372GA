@@ -145,7 +145,7 @@ app.get('/UserProducts', blockAdminFromUserPages, checkAuthenticated, productCtr
 
 /* ---------- Admin: Products CRU ---------- */
 app.get('/admin/products', checkAuthenticated, checkAdmin, productCtrl.getAllProducts); // render admin/products.ejs
-app.get('/viewProduct/:id', redirectIfAuthenticated, blockAdminFromUserPages, productCtrl.showProductDetails); // View single product (front-end)
+app.get('/viewProduct/:id', blockAdminFromUserPages, productCtrl.showProductDetails); // View single product (front-end)
 app.get('/admin/products/new', checkAuthenticated, checkAdmin, productCtrl.newProductForm); // render admin/product-add.ejs
 app.post('/admin/products', checkAuthenticated, checkAdmin, upload.single('image'), productCtrl.addProduct);
 app.get('/admin/products/:id/edit', checkAuthenticated, checkAdmin, productCtrl.getProductById); // render admin/product-edit.ejs
