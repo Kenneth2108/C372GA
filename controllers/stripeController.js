@@ -1,7 +1,9 @@
 const Stripe = require('stripe');
 const CartItems = require('../models/CartItem');
 const Orders = require('../models/orderModel');
+const userModel = require('../models/userModel');
 const stripeTax = require('../services/stripeTax');
+const { sendOrderInvoiceEmail } = require('../services/orderInvoiceEmailService');
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -59,6 +61,42 @@ function buildStripeLineItems(items, summary) {
     },
     quantity: item.quantity || 1
   }));
+}
+
+function resolveUserProfileById(userId) {
+  return new Promise((resolve, reject) => {
+    if (!userId) {
+      return resolve({ email: null, username: null, contact: null });
+    }
+    userModel.getById(userId, (err, user) => {
+      if (err) return reject(err);
+      return resolve({
+        email: user && user.email ? String(user.email) : null,
+        username: user && user.username ? String(user.username) : null,
+        contact: user && user.contact ? String(user.contact) : null
+      });
+    });
+  });
+}
+
+async function queueStripeInvoiceEmail(userId, orderPayload, items) {
+  try {
+    const profile = await resolveUserProfileById(userId);
+    if (!profile || !profile.email) {
+      return;
+    }
+    const enrichedOrder = Object.assign({}, orderPayload, {
+      customerName: profile.username || null,
+      customerPhone: profile.contact || null
+    });
+    await sendOrderInvoiceEmail({
+      order: enrichedOrder,
+      items: items || [],
+      to: profile.email
+    });
+  } catch (mailErr) {
+    console.error('Stripe order invoice email failed:', mailErr);
+  }
 }
 
 function waitForStripeOrder(sessionId, attempts, delayMs) {
@@ -139,6 +177,9 @@ async function finalizeStripeOrder(session) {
   const summary = buildSummary(items);
   const paymentIntentId = session.payment_intent ? String(session.payment_intent) : null;
 
+  const invoiceNumber = 'INV-' + Date.now();
+  const invoiceDate = new Date();
+
   return await new Promise((resolve, reject) => {
     Orders.createOrder(
       {
@@ -146,7 +187,7 @@ async function finalizeStripeOrder(session) {
         subtotal: summary.subtotal,
         taxAmount: summary.taxAmount,
         total: summary.total,
-        invoiceNumber: 'INV-' + Date.now(),
+        invoiceNumber: invoiceNumber,
         paymentMethod: 'stripe',
         paymentStatus: 'Paid',
         stripeSessionId: sessionId,
@@ -159,6 +200,14 @@ async function finalizeStripeOrder(session) {
           if (clearErr) {
             console.error('Stripe clear cart error:', clearErr);
           }
+          queueStripeInvoiceEmail(Number(userId), {
+            invoiceNumber: invoiceNumber,
+            invoiceDate: invoiceDate.toISOString(),
+            paymentMethod: 'Stripe',
+            subtotal: summary.subtotal,
+            taxAmount: summary.taxAmount,
+            total: summary.total
+          }, items);
           resolve(order);
         });
       }

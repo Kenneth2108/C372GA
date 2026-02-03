@@ -55,9 +55,14 @@ function getRefundedByOrder(orderId, callback) {
 
 function getByRefund(refundId, callback) {
   const sql = `
-    SELECT product_id AS productId, quantity, unit_price AS unitPrice
-    FROM refund_items
-    WHERE refund_id = ?
+    SELECT
+      ri.product_id AS productId,
+      ri.quantity,
+      ri.unit_price AS unitPrice,
+      p.productName
+    FROM refund_items ri
+    LEFT JOIN products p ON p.id = ri.product_id
+    WHERE ri.refund_id = ?
   `;
   db.query(sql, [refundId], callback);
 }

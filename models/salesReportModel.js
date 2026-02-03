@@ -1,47 +1,65 @@
 const db = require('../db');
+function toDateKey(value) {
+  if (!value) return null;
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+  if (typeof value === 'string') {
+    return value.slice(0, 10);
+  }
+  return null;
+}
 
 function getOrdersSummary(start, end, callback) {
+  const startKey = toDateKey(start);
+  const endKey = toDateKey(end);
   const sql = `
     SELECT
       COUNT(*) AS orderCount,
       COALESCE(SUM(total), 0) AS grossRevenue,
       COALESCE(AVG(total), 0) AS avgOrderValue
     FROM orders
-    WHERE created_at BETWEEN ? AND ?
+    WHERE DATE(created_at) BETWEEN ? AND ?
   `;
-  db.query(sql, [start, end], (err, rows) => {
+  db.query(sql, [startKey, endKey], (err, rows) => {
     if (err) return callback(err);
     return callback(null, rows && rows[0] ? rows[0] : { orderCount: 0, grossRevenue: 0, avgOrderValue: 0 });
   });
 }
 
 function getRefundsSummary(start, end, callback) {
+  const startKey = toDateKey(start);
+  const endKey = toDateKey(end);
   const sql = `
     SELECT COALESCE(SUM(amount), 0) AS refundsTotal
     FROM refunds
-    WHERE created_at BETWEEN ? AND ?
+    WHERE DATE(created_at) BETWEEN ? AND ?
   `;
-  db.query(sql, [start, end], (err, rows) => {
+  db.query(sql, [startKey, endKey], (err, rows) => {
     if (err) return callback(err);
     return callback(null, rows && rows[0] ? rows[0] : { refundsTotal: 0 });
   });
 }
 
 function getDailyRevenue(start, end, callback) {
+  const startKey = toDateKey(start);
+  const endKey = toDateKey(end);
   const sql = `
     SELECT
       DATE(created_at) AS day,
       COUNT(*) AS orderCount,
       COALESCE(SUM(total), 0) AS revenue
     FROM orders
-    WHERE created_at BETWEEN ? AND ?
+    WHERE DATE(created_at) BETWEEN ? AND ?
     GROUP BY DATE(created_at)
     ORDER BY day ASC
   `;
-  db.query(sql, [start, end], callback);
+  db.query(sql, [startKey, endKey], callback);
 }
 
 function getPaymentBreakdown(start, end, callback) {
+  const startKey = toDateKey(start);
+  const endKey = toDateKey(end);
   const sql = `
     SELECT payment_label AS payment, COUNT(*) AS orderCount, COALESCE(SUM(total), 0) AS revenue
     FROM (
@@ -53,15 +71,17 @@ function getPaymentBreakdown(start, end, callback) {
         END AS payment_label,
         o.total
       FROM orders o
-      WHERE o.created_at BETWEEN ? AND ?
+      WHERE DATE(o.created_at) BETWEEN ? AND ?
     ) AS payments
     GROUP BY payment_label
     ORDER BY revenue DESC
   `;
-  db.query(sql, [start, end], callback);
+  db.query(sql, [startKey, endKey], callback);
 }
 
 function getTopProducts(start, end, limit, callback) {
+  const startKey = toDateKey(start);
+  const endKey = toDateKey(end);
   const sql = `
     SELECT
       oi.product_id AS productId,
@@ -70,12 +90,12 @@ function getTopProducts(start, end, limit, callback) {
       COALESCE(SUM(oi.line_total), 0) AS revenue
     FROM order_items oi
     INNER JOIN orders o ON o.id = oi.order_id
-    WHERE o.created_at BETWEEN ? AND ?
+    WHERE DATE(o.created_at) BETWEEN ? AND ?
     GROUP BY oi.product_id, oi.product_name
     ORDER BY revenue DESC
     LIMIT ?
   `;
-  db.query(sql, [start, end, limit], callback);
+  db.query(sql, [startKey, endKey, limit], callback);
 }
 
 module.exports = {

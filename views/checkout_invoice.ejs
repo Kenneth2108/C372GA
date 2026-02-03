@@ -106,6 +106,16 @@
           <span>Invoice</span>
           <h2 class="fw-bold mt-1 mb-0"><%= invoiceMeta.number %></h2>
           <p class="text-muted mb-0">Date: <%= invoiceMeta.date.toDateString() %></p>
+          <% if (user && (user.username || user.contact)) { %>
+            <div class="text-muted small mt-2">
+              <% if (user.username) { %>
+                <div>Name: <%= user.username %></div>
+              <% } %>
+              <% if (user.contact) { %>
+                <div>Phone: <%= user.contact %></div>
+              <% } %>
+            </div>
+          <% } %>
         </div>
         <div>
           <p class="fw-semibold mb-0"><%= user && user.username ? user.username : 'Customer' %></p>
@@ -115,6 +125,13 @@
           <% } %>
         </div>
       </div>
+
+      <% if (typeof success !== 'undefined' && success && success.length) { %>
+        <div class="alert alert-success mt-3"><%= success[0] %></div>
+      <% } %>
+      <% if (typeof error !== 'undefined' && error && error.length) { %>
+        <div class="alert alert-danger mt-3"><%= error[0] %></div>
+      <% } %>
 
       <div class="table-responsive mt-4">
         <table class="table table-bordered align-middle">
@@ -186,6 +203,11 @@
         <a href="<%= backHref %>" class="btn btn-outline-secondary"><%= backLabelText %></a>
         <div class="d-flex gap-2">
           <button class="btn btn-outline-pink" onclick="window.print()">Print</button>
+          <% if (adminView && orderId) { %>
+            <form method="POST" action="/admin/orders/<%= orderId %>/invoice/email" class="d-inline">
+              <button type="submit" class="btn btn-outline-pink">Send Email</button>
+            </form>
+          <% } %>
           <a href="/" class="btn btn-pink">Return Home</a>
         </div>
       </div>

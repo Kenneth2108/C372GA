@@ -69,6 +69,9 @@ const Orders = {
     const paypalCaptureId = orderData && orderData.paypalCaptureId ? String(orderData.paypalCaptureId) : null;
     const stripeSessionId = orderData && orderData.stripeSessionId ? String(orderData.stripeSessionId) : null;
     const stripePaymentIntentId = orderData && orderData.stripePaymentIntentId ? String(orderData.stripePaymentIntentId) : null;
+    const netsTxnRef = orderData && (orderData.netsTxnRef || orderData.nets_txn_ref)
+      ? String(orderData.netsTxnRef || orderData.nets_txn_ref)
+      : null;
     const paymentMethod = orderData && (orderData.paymentMethod || orderData.payment_method)
       ? String(orderData.paymentMethod || orderData.payment_method)
       : null;
@@ -99,8 +102,8 @@ const Orders = {
       }
 
       const orderSql = `
-        INSERT INTO orders (user_id, subtotal, tax_amount, total, invoice_number, status, paypal_order_id, paypal_capture_id, stripe_session_id, stripe_payment_intent_id, payment_method, carrier, shipment_date, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        INSERT INTO orders (user_id, subtotal, tax_amount, total, invoice_number, status, paypal_order_id, paypal_capture_id, stripe_session_id, stripe_payment_intent_id, nets_txn_ref, payment_method, carrier, shipment_date, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
       `;
 
       db.query(
@@ -116,6 +119,7 @@ const Orders = {
           paypalCaptureId,
           stripeSessionId,
           stripePaymentIntentId,
+          netsTxnRef,
           paymentMethod,
           null,
           null
@@ -169,6 +173,7 @@ const Orders = {
         o.paypal_capture_id,
         o.stripe_session_id,
         o.stripe_payment_intent_id,
+        o.nets_txn_ref,
         o.payment_method,
         o.created_at,
         oi.id AS order_item_id,
@@ -207,6 +212,7 @@ const Orders = {
             paypal_capture_id: row.paypal_capture_id,
             stripe_session_id: row.stripe_session_id,
             stripe_payment_intent_id: row.stripe_payment_intent_id,
+            nets_txn_ref: row.nets_txn_ref || null,
             payment_method: row.payment_method || null,
             createdAt: row.created_at,
             items: []
@@ -247,6 +253,7 @@ const Orders = {
         o.paypal_capture_id,
         o.stripe_session_id,
         o.stripe_payment_intent_id,
+        o.nets_txn_ref,
         o.payment_method,
         o.created_at,
         u.username,
@@ -289,6 +296,7 @@ const Orders = {
             paypal_capture_id: row.paypal_capture_id,
             stripe_session_id: row.stripe_session_id,
             stripe_payment_intent_id: row.stripe_payment_intent_id,
+            nets_txn_ref: row.nets_txn_ref || null,
             payment_method: row.payment_method || null,
             created_at: row.created_at,
             username: row.username,
@@ -336,10 +344,12 @@ const Orders = {
         o.paypal_capture_id,
         o.stripe_session_id,
         o.stripe_payment_intent_id,
+        o.nets_txn_ref,
         o.payment_method,
         o.created_at,
         u.username,
         u.email,
+        u.contact,
         oi.id AS order_item_id,
         oi.product_id,
         oi.product_name,
@@ -376,9 +386,11 @@ const Orders = {
         paypal_capture_id: rows[0].paypal_capture_id,
         stripe_session_id: rows[0].stripe_session_id,
         stripe_payment_intent_id: rows[0].stripe_payment_intent_id,
+        nets_txn_ref: rows[0].nets_txn_ref || null,
         payment_method: rows[0].payment_method || null,
         username: rows[0].username,
         email: rows[0].email,
+        contact: rows[0].contact || null,
         items: []
       };
 
@@ -434,6 +446,7 @@ const Orders = {
         o.paypal_capture_id,
         o.stripe_session_id,
         o.stripe_payment_intent_id,
+        o.nets_txn_ref,
         o.payment_method,
         o.created_at,
         oi.id AS order_item_id,
@@ -471,6 +484,7 @@ const Orders = {
         paypal_capture_id: rows[0].paypal_capture_id,
         stripe_session_id: rows[0].stripe_session_id,
         stripe_payment_intent_id: rows[0].stripe_payment_intent_id,
+        nets_txn_ref: rows[0].nets_txn_ref || null,
         payment_method: rows[0].payment_method || null,
         items: []
       };

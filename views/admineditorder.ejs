@@ -65,6 +65,61 @@
       background: #ff8db8;
       color: #fff;
     }
+    .hero-intro {
+      background: linear-gradient(135deg, #f2f7ff 0%, #fff5ea 55%, #f3f8ff 100%);
+      border-radius: 22px;
+      padding: 1.5rem 2rem;
+      border: 1px solid rgba(255, 181, 90, .2);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-intro::after {
+      content: "";
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle at top right, rgba(255, 168, 102, .35), transparent 70%);
+      top: -80px;
+      right: -60px;
+      border-radius: 50%;
+    }
+    .hero-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .hero-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 25px rgba(245, 158, 11, .35);
+    }
+    .hero-text h2 { margin-bottom: .4rem; font-weight: 700; color: #101828; }
+    .hero-text p { margin: 0; color: #475467; }
+    .hero-badge {
+      background: rgba(245, 158, 11, .15);
+      color: #b45309;
+      padding: .25rem .85rem;
+      border-radius: 999px;
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
   </style>
 </head>
 <body>
@@ -72,10 +127,14 @@
   <%- include('partials/admin_navbar') %>
 
   <main class="container my-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <h2 class="fw-bold mb-0">Edit Order Status</h2>
-        <p class="text-muted mb-0">Update fulfillment for this order.</p>
+    <div class="hero-intro">
+      <div class="hero-left">
+        <div class="hero-icon" aria-hidden="true">OS</div>
+        <div class="hero-text">
+          <h2 class="mb-1">Edit Order Status</h2>
+          <p>Update fulfillment for this order.</p>
+        </div>
+        <span class="hero-badge">Orders</span>
       </div>
       <a href="/admin/orders" class="btn btn-outline-secondary">Back to Orders</a>
     </div>
@@ -116,8 +175,20 @@
           ? new Date(order.shipment_date).toISOString().slice(0, 10)
           : todayIso;
         const carrierValue = order.carrier || 'DHL';
+        const rawPayment = String(order.payment_method || order.paymentMethod || '').toLowerCase();
+        const isPaypalOrder = rawPayment === 'paypal' || !!order.paypal_capture_id;
       %>
       <form action="/admin/orders/<%= order.id %>/edit" method="POST">
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label for="invoiceNumber" class="form-label fw-semibold">Invoice Number</label>
+            <input type="text" class="form-control" id="invoiceNumber" name="invoiceNumber" value="<%= order.invoice_number %>" readonly>
+          </div>
+          <div class="col-md-6">
+            <label for="totalAmount" class="form-label fw-semibold">Total Amount</label>
+            <input type="text" class="form-control" id="totalAmount" name="totalAmount" value="$<%= Number(order.total || 0).toFixed(2) %>" readonly>
+          </div>
+        </div>
         <div class="mb-3">
           <label for="status" class="form-label fw-semibold">Order Status</label>
           <select id="status" name="status" class="form-select" required>
@@ -126,41 +197,37 @@
             <% }); %>
           </select>
         </div>
-        <div class="row g-3 mb-3">
-          <div class="col-md-6">
-            <label for="captureId" class="form-label fw-semibold">PayPal Capture ID</label>
-            <input type="text" class="form-control" id="captureId" name="captureId" placeholder="e.g. 8VV12345ABC" value="<%= order.paypal_capture_id || '' %>" readonly>
-          </div>
-          <div class="col-md-6">
-            <label for="trackingNumber" class="form-label fw-semibold">Tracking Number</label>
-            <input type="text" class="form-control" id="trackingNumber" name="trackingNumber" placeholder="e.g. 1234567890" value="<%= autoTrackingNumber %>" readonly>
-          </div>
-          <div class="col-md-6">
-            <label for="carrier" class="form-label fw-semibold">Carrier</label>
-            <select id="carrier" name="carrier" class="form-select">
-              <option value="DHL" <%= carrierValue === 'DHL' ? 'selected' : '' %>>DHL</option>
-              <option value="FEDEX" <%= carrierValue === 'FEDEX' ? 'selected' : '' %>>FedEx</option>
-              <option value="UPS" <%= carrierValue === 'UPS' ? 'selected' : '' %>>UPS</option>
-              <option value="USPS" <%= carrierValue === 'USPS' ? 'selected' : '' %>>USPS</option>
-              <option value="OTHER" <%= carrierValue === 'OTHER' ? 'selected' : '' %>>Other</option>
-            </select>
-          </div>
-          <input type="hidden" name="trackingNumberType" value="CARRIER_PROVIDED">
-          <div class="col-md-6">
-            <label for="shipmentDate" class="form-label fw-semibold">Shipment Date</label>
-            <input type="date" class="form-control" id="shipmentDate" name="shipmentDate" value="<%= shipmentIso %>">
-          </div>
-          <div class="col-md-6" id="carrierNameOtherGroup">
-            <label for="carrierNameOther" class="form-label fw-semibold">Carrier Name (If Other)</label>
-            <input type="text" class="form-control" id="carrierNameOther" name="carrierNameOther" placeholder="Custom carrier name">
-          </div>
-          <div class="col-md-6 d-flex align-items-end">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="syncPaypal" name="syncPaypal" value="true" checked>
-              <label class="form-check-label fw-semibold" for="syncPaypal">Sync status to PayPal</label>
+        <% if (isPaypalOrder) { %>
+          <h5 class="fw-semibold mt-4 mb-2">PayPal Tracking</h5>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label for="captureId" class="form-label fw-semibold">PayPal Capture ID</label>
+              <input type="text" class="form-control" id="captureId" name="captureId" placeholder="e.g. 8VV12345ABC" value="<%= order.paypal_capture_id || '' %>" readonly>
+            </div>
+            <div class="col-md-6">
+              <label for="trackingNumber" class="form-label fw-semibold">Tracking Number</label>
+              <input type="text" class="form-control" id="trackingNumber" name="trackingNumber" placeholder="e.g. 1234567890" value="<%= autoTrackingNumber %>" readonly>
+            </div>
+            <div class="col-md-6">
+              <label for="carrier" class="form-label fw-semibold">Carrier</label>
+              <select id="carrier" name="carrier" class="form-select">
+                <option value="DHL" <%= carrierValue === 'DHL' ? 'selected' : '' %>>DHL</option>
+                <option value="FEDEX" <%= carrierValue === 'FEDEX' ? 'selected' : '' %>>FedEx</option>
+              </select>
+            </div>
+            <input type="hidden" name="trackingNumberType" value="CARRIER_PROVIDED">
+            <div class="col-md-6">
+              <label for="shipmentDate" class="form-label fw-semibold">Shipment Date</label>
+              <input type="date" class="form-control" id="shipmentDate" name="shipmentDate" value="<%= shipmentIso %>">
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="syncPaypal" name="syncPaypal" value="true" checked>
+                <label class="form-check-label fw-semibold" for="syncPaypal">Sync status to PayPal</label>
+              </div>
             </div>
           </div>
-        </div>
+        <% } %>
         <button type="submit" class="btn btn-pink px-4">Save Status</button>
       </form>
     </div>
@@ -168,25 +235,5 @@
 
   <%- include('partials/footer') %>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    (function () {
-      var carrierSelect = document.getElementById('carrier');
-      var carrierOtherGroup = document.getElementById('carrierNameOtherGroup');
-      var carrierOtherInput = document.getElementById('carrierNameOther');
-      if (!carrierSelect || !carrierOtherGroup || !carrierOtherInput) return;
-
-      function toggleCarrierOther() {
-        var show = carrierSelect.value === 'OTHER';
-        carrierOtherGroup.style.display = show ? '' : 'none';
-        carrierOtherInput.required = show;
-        if (!show) {
-          carrierOtherInput.value = '';
-        }
-      }
-
-      carrierSelect.addEventListener('change', toggleCarrierOther);
-      toggleCarrierOther();
-    })();
-  </script>
 </body>
 </html>

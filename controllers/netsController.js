@@ -1,5 +1,7 @@
 const axios = require("axios");
 const netsService = require("../services/nets");
+const userModel = require("../models/userModel");
+const { sendOrderInvoiceEmail } = require("../services/orderInvoiceEmailService");
 
 // Adjust these paths to match your project (common ones shown)
 const CartItems = require("../models/CartItem");        // or ../models/cartModel
@@ -8,6 +10,56 @@ const Orders = require("../models/orderModel");         // or ../models/Order
 function getUserId(req) {
   const user = req.session && req.session.user;
   return user && (user.userId || user.id);
+}
+
+function resolveUserProfile(req, userId, callback) {
+  const sessionUser = req.session && req.session.user;
+  if (sessionUser && (sessionUser.email || sessionUser.username || sessionUser.contact)) {
+    return callback(null, {
+      email: sessionUser.email ? String(sessionUser.email) : null,
+      username: sessionUser.username ? String(sessionUser.username) : null,
+      contact: sessionUser.contact ? String(sessionUser.contact) : null
+    });
+  }
+  if (!userId) {
+    return callback(null, { email: null, username: null, contact: null });
+  }
+  userModel.getById(userId, (err, user) => {
+    if (err) return callback(err);
+    return callback(null, {
+      email: user && user.email ? String(user.email) : null,
+      username: user && user.username ? String(user.username) : null,
+      contact: user && user.contact ? String(user.contact) : null
+    });
+  });
+}
+
+function queueOrderInvoiceEmail(req, userId, orderPayload, items) {
+  resolveUserProfile(req, userId, (err, profile) => {
+    if (err || !profile || !profile.email) {
+      if (err) {
+        console.error("NETS order email lookup error:", err);
+      }
+      return;
+    }
+
+    const enrichedOrder = Object.assign({}, orderPayload, {
+      customerName: profile.username || null,
+      customerPhone: profile.contact || null
+    });
+
+    (async () => {
+      try {
+        await sendOrderInvoiceEmail({
+          order: enrichedOrder,
+          items: items || [],
+          to: profile.email
+        });
+      } catch (mailErr) {
+        console.error("NETS order invoice email failed:", mailErr);
+      }
+    })();
+  });
 }
 
 function normalizeCartItems(cartItems) {
@@ -149,6 +201,7 @@ exports.renderSuccess = async function (req, res) {
       taxAmount: pending.summary.taxAmount,
       total: pending.summary.total,
       invoiceNumber: pending.invoiceMeta.number,
+      netsTxnRef: txnRetrievalRef,
       paymentMethod: "NETS" // optional, if your DB supports it
     },
     pending.items,
@@ -166,8 +219,18 @@ exports.renderSuccess = async function (req, res) {
         req.session.invoiceData = {
           items: pending.items,
           summary: pending.summary,
-          invoiceMeta: pending.invoiceMeta
+          invoiceMeta: pending.invoiceMeta,
+          paymentMethod: "NETS"
         };
+
+        queueOrderInvoiceEmail(req, userId, {
+          invoiceNumber: pending.invoiceMeta.number,
+          invoiceDate: pending.invoiceMeta.date,
+          paymentMethod: "NETS",
+          subtotal: pending.summary.subtotal,
+          taxAmount: pending.summary.taxAmount,
+          total: pending.summary.total
+        }, pending.items);
 
         // Mark txn as completed and clear pending checkout
         req.session.lastCompletedNetsTxn = txnRetrievalRef;

@@ -29,7 +29,7 @@ function getAll(callback) {
     FROM refunds r
     INNER JOIN orders o ON o.id = r.order_id
     INNER JOIN users u ON u.id = o.user_id
-    ORDER BY r.created_at DESC
+    ORDER BY r.created_at ASC
   `;
   db.query(sql, callback);
 }

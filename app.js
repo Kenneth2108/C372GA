@@ -32,6 +32,22 @@ const {
   upload
 } = require('./middleware');
 
+const redirectIfAuthenticated = (req, res, next) => {
+  if (!req.session || !req.session.user) return next();
+  const role = req.session.user.role;
+  return res.redirect(role === 'user' ? '/UserProducts' : '/admin');
+};
+
+const requireRegistering2FA = (req, res, next) => {
+  if (req.session && req.session.user) {
+    return res.redirect('/');
+  }
+  if (req.session && req.session._reg2fa_secret) {
+    return next();
+  }
+  return res.redirect('/register');
+};
+
 // Register common middleware (views, static, session, flash)
 registerMiddleware(app);
 //(Kenneth End)
@@ -51,6 +67,7 @@ app.post('/checkout/paypal/capture', checkAuthenticated, checkUser, paymentCtrl.
 app.get('/invoice', checkAuthenticated, checkUser, checkoutCtrl.showInvoice);
 app.get('/orders', checkAuthenticated, checkUser, orderCtrl.listUserOrders);
 app.get('/orders/:id/invoice', checkAuthenticated, checkUser, orderCtrl.showUserInvoice);
+app.post('/orders/:id/reorder', checkAuthenticated, checkUser, orderCtrl.reorderOrder);
 app.get('/refunds', checkAuthenticated, checkUser, refundCtrl.list);
 app.get('/refunds/:id', checkAuthenticated, checkUser, refundCtrl.details);
 
@@ -63,24 +80,24 @@ app.get('/contact', contactCtrl.showContact);
 
 /* ---------- Register ---------- */
 // GET register — show form + (optional) 2FA QR during registration
-app.get('/register', userCtrl.showRegister);
+app.get('/register', redirectIfAuthenticated, userCtrl.showRegister);
 
 // POST register — SHA1 in SQL, optional 2FA verify first code
 app.post('/register', userCtrl.register);
 
 /* ---------- Login ---------- */
 // GET
-app.get('/login', userCtrl.showLogin);
+app.get('/login', redirectIfAuthenticated, userCtrl.showLogin);
 
 // POST password step — if account has 2FA, go to /2fa/verify
 app.post('/login', userCtrl.login);
 
 /* ---------- 2FA ---------- */
 // SETUP (for logged-in user) — show QR
-app.get('/2fa/setup', userCtrl.twofaSetupForm);
+app.get('/2fa/setup', requireRegistering2FA, userCtrl.twofaSetupForm);
 
 // SETUP confirm
-app.post('/2fa/setup', userCtrl.twofaSetupConfirm);
+app.post('/2fa/setup', requireRegistering2FA, userCtrl.twofaSetupConfirm);
 
 // VERIFY after password step
 app.get('/2fa/verify', userCtrl.twofaVerifyForm);
@@ -103,13 +120,16 @@ app.post('/admin/users/:id/role', checkAuthenticated, checkAdmin, userCtrl.updat
 app.post('/admin/users/:id/delete', checkAuthenticated, checkAdmin, userCtrl.deleteUser);
 app.get('/admin/orders', checkAuthenticated, checkAdmin, orderCtrl.listAllOrders);
 app.get('/admin/orders/:id/invoice', checkAuthenticated, checkAdmin, orderCtrl.showAdminInvoice);
+app.post('/admin/orders/:id/invoice/email', checkAuthenticated, checkAdmin, orderCtrl.sendAdminInvoiceEmail);
 app.get('/admin/orders/:id/edit', checkAuthenticated, checkAdmin, orderCtrl.editOrderStatusForm);
 app.post('/admin/orders/:id/edit', checkAuthenticated, checkAdmin, orderCtrl.updateOrderStatus);
 app.get('/admin/orders/:id/refund', checkAuthenticated, checkAdmin, paypalRefundCtrl.show);
 app.post('/admin/orders/:id/refund', checkAuthenticated, checkAdmin, paypalRefundCtrl.refund);
 app.get('/admin/refunds', checkAuthenticated, checkAdmin, adminRefundsCtrl.list);
 app.get('/admin/refunds/:id', checkAuthenticated, checkAdmin, adminRefundsCtrl.details);
+app.post('/admin/refunds/:id/email', checkAuthenticated, checkAdmin, adminRefundsCtrl.sendEmail);
 app.get('/admin/reports/sales', checkAuthenticated, checkAdmin, reportsCtrl.salesReport);
+app.get('/admin/reports/sales.csv', checkAuthenticated, checkAdmin, reportsCtrl.exportSalesReportCsv);
 
 //(Kenneth End) 
 
@@ -125,7 +145,7 @@ app.get('/UserProducts', blockAdminFromUserPages, checkAuthenticated, productCtr
 
 /* ---------- Admin: Products CRU ---------- */
 app.get('/admin/products', checkAuthenticated, checkAdmin, productCtrl.getAllProducts); // render admin/products.ejs
-app.get('/viewProduct/:id', blockAdminFromUserPages, productCtrl.showProductDetails); // View single product (front-end)
+app.get('/viewProduct/:id', redirectIfAuthenticated, blockAdminFromUserPages, productCtrl.showProductDetails); // View single product (front-end)
 app.get('/admin/products/new', checkAuthenticated, checkAdmin, productCtrl.newProductForm); // render admin/product-add.ejs
 app.post('/admin/products', checkAuthenticated, checkAdmin, upload.single('image'), productCtrl.addProduct);
 app.get('/admin/products/:id/edit', checkAuthenticated, checkAdmin, productCtrl.getProductById); // render admin/product-edit.ejs

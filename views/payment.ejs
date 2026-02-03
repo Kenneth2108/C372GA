@@ -3,132 +3,359 @@
 <head>
   <meta charset="UTF-8">
   <title>Checkout Payment</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     :root {
       color-scheme: light;
+      --pink-700: #ff4f8f;
+      --pink-600: #ff6fa3;
+      --pink-500: #ff8db8;
+      --pink-200: #ffd1e6;
+      --pink-100: #ffe6f1;
+      --ink-900: #2b1b2b;
+      --ink-700: #5c3c55;
+      --ink-500: #7c5a73;
+      --ink-400: #b08aa1;
+      --border: #f3d5e4;
+      --bg: #fff4f9;
+      --card: #ffffff;
+      --shadow: 0 18px 40px rgba(255, 94, 158, 0.18);
     }
     body {
-      background: radial-gradient(circle at top, #ffe8f3 0%, #fff6fb 45%, #ffeef6 100%);
-      font-family: 'Segoe UI', sans-serif;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(255, 141, 184, 0.22), transparent 45%),
+        radial-gradient(circle at 80% 0%, rgba(255, 111, 163, 0.2), transparent 42%),
+        linear-gradient(180deg, #fff7fb 0%, #fff2f8 45%, #ffeef6 100%);
+      font-family: 'Inter', sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
+    .pink-navbar {
+      background: linear-gradient(90deg, var(--pink-500), var(--pink-700));
+      box-shadow: 0 12px 32px rgba(255, 111, 163, 0.24);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+    }
+    .pink-navbar .navbar-brand,
+    .pink-navbar .nav-link {
+      color: #fff;
+      font-weight: 600;
+    }
+    .pink-navbar .nav-link:hover,
+    .pink-navbar .nav-link:focus {
+      color: #ffe4f0;
+    }
+    .pink-navbar .navbar-toggler {
+      border-color: rgba(255,255,255,0.4);
+    }
+    .pink-navbar .navbar-toggler-icon {
+      filter: brightness(0) invert(1);
+    }
     .ff-main {
       flex: 1 0 auto;
-      padding: 40px 0 80px;
+      padding: 42px 0 96px;
     }
     .checkout-hero {
-      max-width: 680px;
-      margin: 0 auto 32px;
+      max-width: 760px;
+      margin: 0 auto 30px;
     }
     .checkout-hero .eyebrow-label {
-      letter-spacing: 0.2em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      font-size: 0.85rem;
-      color: #ff6fa3;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
+      font-size: 0.72rem;
+      color: var(--ink-400);
+      font-weight: 700;
+      margin-bottom: 0.6rem;
       display: inline-block;
     }
     .checkout-hero h1 {
       font-weight: 700;
-      color: #312631;
+      color: var(--ink-900);
+      letter-spacing: -0.02em;
+      font-size: 2.2rem;
     }
-    .payment-card,
-    .summary-card {
-      background: #fff;
-      border-radius: 24px;
-      padding: 28px;
-      box-shadow: 0 25px 60px rgba(255, 111, 163, 0.18);
-      border: 1px solid #ffe1ee;
+    .checkout-hero p {
+      color: var(--ink-500);
+      font-weight: 500;
+      max-width: 520px;
+      margin: 0 auto;
     }
-    .payment-methods {
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
+    .hero-banner {
+      position: relative;
+      background: #ffffff;
+      border-radius: 26px;
+      padding: 30px 34px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      text-align: center;
+      max-width: 920px;
+      margin: 0 auto 28px;
+      overflow: hidden;
     }
-    .method-card {
+    .hero-banner::before,
+    .hero-banner::after {
+      content: "";
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle at center, rgba(255, 111, 163, 0.25), transparent 70%);
+    }
+    .hero-banner::before {
+      top: -90px;
+      left: -60px;
+    }
+    .hero-banner::after {
+      bottom: -100px;
+      right: -40px;
+    }
+    .hero-banner .hero-line {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: #fff5fb;
+      color: var(--pink-700);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .hero-banner h1 {
+      margin: 14px 0 10px;
+      font-size: 2.35rem;
+      color: var(--ink-900);
+    }
+    .hero-banner p {
+      margin: 0;
+      color: var(--ink-500);
+      font-size: 0.98rem;
+    }
+    .layout-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.9fr);
+      gap: 20px;
+      align-items: start;
+      grid-auto-rows: auto;
+    }
+    @media (max-width: 991px) {
+      .layout-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .card-panel {
+      background: var(--card);
       border-radius: 18px;
-      padding: 20px;
-      border: 1px solid #ffd7e8;
-      background: #fff7fb;
+      padding: 26px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      min-height: 0;
+      height: 100%;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
     }
-    .method-card.muted {
-      background: #fff;
-      border-style: dashed;
-      opacity: 0.8;
+    .card-panel:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 22px 46px rgba(255, 94, 158, 0.22);
     }
-    .method-header {
+    .payment-card {
+      position: relative;
+    }
+    .payment-card::after {
+      content: "";
+      position: absolute;
+      inset: 8px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      pointer-events: none;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .payment-card:hover::after {
+      border-color: rgba(255, 111, 163, 0.35);
+      box-shadow: 0 0 0 2px rgba(255, 141, 184, 0.18);
+    }
+    .panel-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1rem;
-      margin-bottom: 0.5rem;
+      margin-bottom: 14px;
     }
-    .method-header h3 {
+    .panel-header h3 {
       margin: 0;
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       font-weight: 700;
-      color: #312631;
+      color: var(--ink-900);
     }
-    .pill {
-      background: #ff6fa3;
-      color: #fff;
-      border-radius: 999px;
-      font-size: 0.7rem;
-      padding: 4px 10px;
-      letter-spacing: 0.08em;
+    .tag {
+      font-size: 0.65rem;
       text-transform: uppercase;
-    }
-    .pill.soon {
-      background: #ffbf47;
-      color: #472a00;
-    }
-    .summary-card h2,
-    .payment-card h2 {
+      letter-spacing: 0.08em;
+      padding: 4px 8px;
+      border-radius: 999px;
       font-weight: 700;
-      color: #312631;
-      margin-bottom: 1.25rem;
+    }
+    .tag.popular { background: #ffe4a7; color: #7a3b00; }
+    .tag.stripe { background: #efe8ff; color: #5b21b6; }
+    .tag.nets { background: #ffe0ef; color: #9d174d; }
+    .feature-list {
+      padding-left: 1rem;
+      margin-bottom: 18px;
+      color: var(--ink-700);
+      font-size: 0.88rem;
+    }
+    .feature-list li {
+      margin-bottom: 6px;
+    }
+    .summary-panel {
+      grid-row: span 2;
+      align-self: start;
+    }
+    @media (min-width: 992px) {
+      .summary-panel {
+        position: sticky;
+        top: 110px;
+      }
+    }
+    .summary-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      color: var(--ink-900);
+      font-weight: 700;
+    }
+    .summary-metrics {
+      font-size: 0.9rem;
+      color: var(--ink-400);
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      color: var(--ink-700);
+      font-size: 0.92rem;
+    }
+    .summary-items {
+      margin: 12px 0 16px;
+      display: grid;
+      gap: 8px;
+    }
+    .summary-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 10px 0 12px;
     }
     .summary-item {
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
-      padding: 0.45rem 0;
-      border-bottom: 1px solid #f9ddeb;
+      gap: 10px;
+      color: var(--ink-700);
+      font-size: 0.88rem;
     }
-    .summary-item:last-child {
-      border-bottom: none;
+    .summary-item span:first-child {
+      max-width: 70%;
     }
-    .summary-item span {
-      color: #6b5566;
-      font-size: 0.95rem;
+    .summary-item small {
+      color: var(--ink-400);
+      font-weight: 500;
     }
-    .summary-total {
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px dashed #ffd7e8;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #ff3d72;
-      display: flex;
-      justify-content: space-between;
+    .total-box {
+      margin: 16px 0;
+      padding: 16px;
+      background: #fff7fb;
+      border-radius: 14px;
+      border: 1px solid var(--border);
     }
-    .btn-outline-pink {
-      border: 1px solid #ff6fa3;
-      color: #ff6fa3;
+    .total-box span {
+      display: block;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink-400);
     }
-    .btn-outline-pink:hover {
-      background-color: #ff6fa3;
+    .total-box strong {
+      font-size: 1.6rem;
+      color: var(--pink-700);
+    }
+    .btn-outline-soft {
+      border: 1px solid var(--pink-500);
+      color: var(--pink-600);
+      background: #fff;
+      border-radius: 12px;
+      font-weight: 600;
+      padding: 12px 16px;
+      min-height: 48px;
+    }
+    .btn-outline-soft:hover {
+      background: var(--pink-600);
       color: #fff;
+    }
+    .btn-soft {
+      background: #fff5fb;
+      border-radius: 12px;
+      border: none;
+      font-weight: 600;
+      color: var(--pink-700);
+      padding: 12px 16px;
+      min-height: 48px;
+    }
+    .provider-actions {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+    }
+    #paypal-button-container {
+      min-height: 48px;
+    }
+    .btn-provider {
+      border-radius: 12px;
+      font-weight: 600;
+      padding: 12px 16px;
+      min-height: 48px;
+      box-shadow: 0 10px 20px rgba(107, 92, 255, 0.12);
+    }
+    .btn-provider.stripe {
+      background: #6b5cff;
+      color: #fff;
+      border: none;
+    }
+    .btn-provider.stripe:hover {
+      filter: brightness(1.05);
+      color: #fff;
+    }
+    .btn-provider.nets {
+      background: #ffe3f1;
+      color: #9d174d;
+      border: 1px solid #f9a8d4;
+      box-shadow: 0 10px 18px rgba(249, 168, 212, 0.3);
+    }
+    .btn-provider.nets:hover {
+      background: #fbcfe8;
     }
     #payment-status {
       min-height: 20px;
     }
     #stripe-status {
       min-height: 20px;
+    }
+    .fade-in {
+      opacity: 0;
+      transform: translateY(12px);
+      animation: fadeUp 0.6s ease forwards;
+    }
+    .fade-in.delay-1 { animation-delay: 0.08s; }
+    .fade-in.delay-2 { animation-delay: 0.16s; }
+    .fade-in.delay-3 { animation-delay: 0.24s; }
+    .fade-in.delay-4 { animation-delay: 0.32s; }
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   </style>
 </head>
@@ -137,78 +364,95 @@
 
   <main class="ff-main">
     <div class="container">
-      <section class="checkout-hero text-center">
-        <span class="eyebrow-label">Secure checkout</span>
+      <div class="hero-banner fade-in">
+        <span class="hero-line">Secure checkout</span>
         <h1>Choose Your Payment</h1>
-        <p class="text-muted mb-0">Pick a method to complete your fluffy order.</p>
-      </section>
+        <p>Pick PayPal, Stripe card payment, or NETS. Your order stays reserved while you confirm.</p>
+      </div>
 
-      <div class="row g-4">
-        <div class="col-lg-7">
-          <div class="payment-card">
-            <h2>Payment Methods</h2>
-            <div class="payment-methods">
-              <div class="method-card">
-                <div class="method-header">
-                  <h3>PayPal</h3>
-                  <span class="pill">Recommended</span>
-                </div>
-                <p class="text-muted mb-3">Pay quickly with your PayPal balance or card.</p>
-                <div id="paypal-button-container"></div>
-                <div id="payment-status" class="text-danger small" role="alert"></div>
-              </div>
-
-              <div class="method-card">
-                <div class="method-header">
-                  <h3>Stripe</h3>
-                  <span class="pill">Card</span>
-                </div>
-                <p class="text-muted mb-3">Pay securely with your credit or debit card.</p>
-                <button id="stripe-checkout-btn" type="button" class="btn btn-outline-pink w-100">
-                  Pay with Stripe
-                </button>
-                <div id="stripe-status" class="text-danger small mt-2" role="alert"></div>
-              </div>
-
-              <div class="method-card">
-                <div class="method-header">
-                  <h3>NETS</h3>
-                  <span class="pill">Scan to Pay</span>
-                </div>
-                <p class="text-muted mb-3">You’ll be shown a NETS QR code to scan and pay.</p>
-
-                <form action="/generateNETSQR" method="POST" class="m-0">
-                  <input type="hidden" name="cartTotal" value="<%= summary.total.toFixed(2) %>">
-                  <button type="submit" class="btn btn-outline-pink w-100">Pay with NETS</button>
-                </form>
-              </div>
-            </div>
+      <div class="layout-grid">
+        <div class="card-panel payment-card fade-in delay-1">
+          <div class="panel-header">
+            <h3>PayPal</h3>
+            <span class="tag popular">Popular</span>
           </div>
+          <p class="summary-metrics">Log in to PayPal and confirm your payment in seconds.</p>
+          <ul class="feature-list">
+            <li>Purchase protection included</li>
+            <li>Fast checkout on any device</li>
+            <li>No card details shared</li>
+          </ul>
+          <div class="provider-actions">
+            <div id="paypal-button-container"></div>
+          </div>
+          <div id="payment-status" class="text-danger small" role="alert"></div>
         </div>
 
-        <div class="col-lg-5">
-          <div class="summary-card">
-            <h2>Order Summary</h2>
+        <div class="card-panel payment-card fade-in delay-2">
+          <div class="panel-header">
+            <h3>Debit or credit card</h3>
+            <span class="tag stripe">Stripe</span>
+          </div>
+          <p class="summary-metrics">Pay securely with Stripe using Visa, Mastercard, or Amex.</p>
+          <ul class="feature-list">
+            <li>Secure card processing</li>
+            <li>Instant confirmation</li>
+            <li>Stripe test mode supported</li>
+          </ul>
+          <button id="stripe-checkout-btn" type="button" class="btn btn-provider stripe w-100">
+            Pay with Card
+          </button>
+          <div id="stripe-status" class="text-danger small mt-2" role="alert"></div>
+        </div>
+
+        <div class="card-panel summary-panel fade-in delay-3">
+          <div class="summary-title">
+            <span>Order Summary</span>
+            <span class="summary-metrics">Items: <%= items.length %></span>
+          </div>
+          <div class="summary-items">
             <% items.forEach(function(item) { %>
               <div class="summary-item">
-                <span><%= item.productName %> x <%= item.quantity %></span>
-                <strong>$<%= item.lineTotal.toFixed(2) %></strong>
+                <span>
+                  <%= item.productName || 'Item' %>
+                  <small> x <%= item.quantity %></small>
+                </span>
+                <span>$<%= item.lineTotal.toFixed(2) %></span>
               </div>
-            <% }) %>
-            <div class="summary-item">
-              <span>Subtotal</span>
-              <strong>$<%= summary.subtotal.toFixed(2) %></strong>
-            </div>
-            <div class="summary-item">
-              <span>GST (9%)</span>
-              <strong>$<%= summary.taxAmount.toFixed(2) %></strong>
-            </div>
-            <div class="summary-total">
-              <span>Total</span>
-              <span>$<%= summary.total.toFixed(2) %></span>
-            </div>
-            <a href="/cart" class="btn btn-outline-pink w-100 mt-4">Back to Cart</a>
+            <% }); %>
           </div>
+          <div class="summary-divider"></div>
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span>$<%= summary.subtotal.toFixed(2) %></span>
+          </div>
+          <div class="summary-row">
+            <span>Estimated Tax (9%)</span>
+            <span>$<%= summary.taxAmount.toFixed(2) %></span>
+          </div>
+        <div class="total-box">
+          <span>Total Due</span>
+          <strong>$<%= summary.total.toFixed(2) %></strong>
+        </div>
+          <a href="/cart" class="btn btn-outline-soft w-100 mb-2">Back to cart</a>
+          <a href="/UserProducts" class="btn btn-soft w-100">Continue shopping</a>
+        </div>
+
+        <div class="card-panel payment-card fade-in delay-4" style="grid-column: span 2;">
+          <div class="panel-header">
+            <h3>NETS QR</h3>
+            <span class="tag nets">NETS</span>
+          </div>
+          <p class="summary-metrics">Scan and pay with your local bank app using NETS QR.</p>
+          <ul class="feature-list">
+            <li>Scan to pay in seconds</li>
+            <li>Supports participating banks</li>
+            <li>Secure NETS network</li>
+          </ul>
+          <form action="/generateNETSQR" method="POST" class="m-0">
+            <input type="hidden" name="cartTotal" value="<%= summary.total.toFixed(2) %>">
+            <button type="submit" class="btn btn-provider nets w-100">Generate NETS QR</button>
+          </form>
         </div>
       </div>
     </div>
@@ -217,7 +461,7 @@
   <%- include('partials/footer') %>
 
   <script src="https://js.stripe.com/v3/"></script>
-  <script src="https://www.paypal.com/sdk/js?client-id=<%= paypalClientId %>&currency=SGD"></script>
+  <script id="paypal-sdk" src="https://www.paypal.com/sdk/js?client-id=<%= paypalClientId %>&currency=SGD"></script>
   <script>
     (function() {
       var paypalClientId = '<%= paypalClientId %>';
@@ -225,6 +469,7 @@
       var stripePublishableKey = '<%= stripePublishableKey %>';
       var stripeStatusEl = document.getElementById('stripe-status');
       var stripeButton = document.getElementById('stripe-checkout-btn');
+      var paypalRendered = false;
 
       function setStatus(message) {
         statusEl.textContent = message || '';
@@ -236,53 +481,70 @@
         }
       }
 
-      if (!paypalClientId || typeof paypal === 'undefined') {
-        setStatus('PayPal is not configured yet. Please update the client id.');
-        return;
+      function renderPaypalButtons() {
+        if (paypalRendered || typeof paypal === 'undefined') {
+          return false;
+        }
+
+        paypalRendered = true;
+        paypal.Buttons({
+          createOrder: function() {
+            setStatus('');
+            return fetch('/checkout/paypal/create-order', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+              .then(function(res) { return res.json(); })
+              .then(function(data) {
+                if (!data || !data.id) {
+                  throw new Error(data && data.error ? data.error : 'Unable to create PayPal order.');
+                }
+                return data.id;
+              })
+              .catch(function(err) {
+                setStatus(err.message || 'Unable to start PayPal checkout.');
+                throw err;
+              });
+          },
+          onApprove: function(data) {
+            setStatus('Finalizing payment...');
+            return fetch('/checkout/paypal/capture', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: new URLSearchParams({ orderId: data.orderID })
+            })
+              .then(function(res) { return res.json(); })
+              .then(function(result) {
+                if (result && result.redirectUrl) {
+                  window.location.href = result.redirectUrl;
+                  return;
+                }
+                throw new Error(result && result.error ? result.error : 'Payment capture failed.');
+              })
+              .catch(function(err) {
+                setStatus(err.message || 'Payment capture failed.');
+              });
+          },
+          onError: function(err) {
+            setStatus('PayPal error: ' + (err && err.message ? err.message : 'Please try again.'));
+          }
+        }).render('#paypal-button-container');
+        return true;
       }
 
-      paypal.Buttons({
-        createOrder: function() {
-          setStatus('');
-          return fetch('/checkout/paypal/create-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-          })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-              if (!data || !data.id) {
-                throw new Error(data && data.error ? data.error : 'Unable to create PayPal order.');
-              }
-              return data.id;
-            })
-            .catch(function(err) {
-              setStatus(err.message || 'Unable to start PayPal checkout.');
-              throw err;
-            });
-        },
-        onApprove: function(data) {
-          setStatus('Finalizing payment...');
-          return fetch('/checkout/paypal/capture', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ orderId: data.orderID })
-          })
-            .then(function(res) { return res.json(); })
-            .then(function(result) {
-              if (result && result.redirectUrl) {
-                window.location.href = result.redirectUrl;
-                return;
-              }
-              throw new Error(result && result.error ? result.error : 'Payment capture failed.');
-            })
-            .catch(function(err) {
-              setStatus(err.message || 'Payment capture failed.');
-            });
-        },
-        onError: function(err) {
-          setStatus('PayPal error: ' + (err && err.message ? err.message : 'Please try again.'));
+      if (!paypalClientId) {
+        setStatus('PayPal is not configured yet. Please update the client id.');
+      } else if (!renderPaypalButtons()) {
+        var paypalScript = document.getElementById('paypal-sdk');
+        if (paypalScript) {
+          paypalScript.addEventListener('load', function() {
+            renderPaypalButtons();
+          });
+          paypalScript.addEventListener('error', function() {
+            setStatus('PayPal failed to load. Please check your connection or disable blockers.');
+          });
         }
-      }).render('#paypal-button-container');
+      }
 
       if (!stripePublishableKey) {
         setStripeStatus('Stripe is not configured yet. Please update the publishable key.');

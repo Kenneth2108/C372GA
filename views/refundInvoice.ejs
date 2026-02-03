@@ -27,7 +27,6 @@
       <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
           <h2 class="mb-1">Refund Invoice</h2>
-          <p class="text-muted mb-0">Refund ID: <strong><%= refund.id %></strong></p>
           <p class="text-muted mb-0">Invoice #: <strong><%= refund.invoiceNumber %></strong></p>
         </div>
 
@@ -52,7 +51,46 @@
 
                 <dt class="col-sm-4">Refund Date</dt>
                 <dd class="col-sm-8"><%= refund.createdAt ? new Date(refund.createdAt).toLocaleString() : '-' %></dd>
+
+                <dt class="col-sm-4">Refund Reason</dt>
+                <dd class="col-sm-8"><%= refund.refundReason ? refund.refundReason : '-' %></dd>
               </dl>
+            </div>
+          </div>
+
+          <div class="card shadow-sm border-0 mt-4">
+            <div class="card-body">
+              <h5 class="card-title mb-3">Refunded Items</h5>
+              <% if (refundItems && refundItems.length) { %>
+                <div class="table-responsive">
+                  <table class="table table-sm align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Product</th>
+                        <th class="text-center">Qty</th>
+                        <th class="text-end">Unit Price</th>
+                        <th class="text-end">Line Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% refundItems.forEach(function(item){ 
+                           const qty = Number(item.quantity || 0);
+                           const price = Number(item.unitPrice || 0);
+                           const line = qty * price;
+                      %>
+                        <tr>
+                          <td><%= item.productName || item.productId %></td>
+                          <td class="text-center"><%= qty %></td>
+                          <td class="text-end">$<%= price.toFixed(2) %></td>
+                          <td class="text-end">$<%= line.toFixed(2) %></td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } else { %>
+                <p class="text-muted mb-0">No item details recorded for this refund.</p>
+              <% } %>
             </div>
           </div>
         </div>
@@ -86,6 +124,9 @@
               <h6 class="mb-2">Customer</h6>
               <div class="text-muted"><%= refund.username %></div>
               <div class="text-muted"><%= refund.email %></div>
+              <% if (refund.contact) { %>
+                <div class="text-muted">Contact: <%= refund.contact %></div>
+              <% } %>
               <div class="text-muted mt-2">
                 Order Date: <%= refund.orderCreatedAt ? new Date(refund.orderCreatedAt).toLocaleString() : '-' %>
               </div>

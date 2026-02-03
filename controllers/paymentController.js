@@ -1,7 +1,9 @@
 const CartItems = require('../models/CartItem');
 const Orders = require('../models/orderModel');
+const userModel = require('../models/userModel');
 const paypal = require('../services/paypal');
 const orderTracking = require('./paypalTrackingController');
+const { sendOrderInvoiceEmail } = require('../services/orderInvoiceEmailService');
 
 function normalizeCartItems(cartItems) {
   return (cartItems || []).map((item) => {
@@ -92,6 +94,56 @@ function extractCaptureId(capture) {
 function buildTrackingNumber(invoiceNumber) {
   const digits = String(invoiceNumber || '').replace(/\D/g, '');
   return digits || String(Date.now());
+}
+
+function resolveUserProfile(req, userId, callback) {
+  const sessionUser = req.session && req.session.user;
+  if (sessionUser && (sessionUser.email || sessionUser.username || sessionUser.contact)) {
+    return callback(null, {
+      email: sessionUser.email ? String(sessionUser.email) : null,
+      username: sessionUser.username ? String(sessionUser.username) : null,
+      contact: sessionUser.contact ? String(sessionUser.contact) : null
+    });
+  }
+  if (!userId) {
+    return callback(null, { email: null, username: null, contact: null });
+  }
+  userModel.getById(userId, (err, user) => {
+    if (err) return callback(err);
+    return callback(null, {
+      email: user && user.email ? String(user.email) : null,
+      username: user && user.username ? String(user.username) : null,
+      contact: user && user.contact ? String(user.contact) : null
+    });
+  });
+}
+
+function queueOrderInvoiceEmail(req, userId, orderPayload, items) {
+  resolveUserProfile(req, userId, (err, profile) => {
+    if (err || !profile || !profile.email) {
+      if (err) {
+        console.error('Order email lookup error:', err);
+      }
+      return;
+    }
+
+    const enrichedOrder = Object.assign({}, orderPayload, {
+      customerName: profile.username || null,
+      customerPhone: profile.contact || null
+    });
+
+    (async () => {
+      try {
+        await sendOrderInvoiceEmail({
+          order: enrichedOrder,
+          items: items || [],
+          to: profile.email
+        });
+      } catch (mailErr) {
+        console.error('Order invoice email failed:', mailErr);
+      }
+    })();
+  });
 }
 
 exports.showPaymentOptions = function (req, res) {
@@ -203,6 +255,15 @@ exports.capturePaypalOrder = function (req, res) {
             console.error('Order create error:', orderErr);
             return res.status(500).json({ error: 'Unable to finalize the order.' });
           }
+
+          queueOrderInvoiceEmail(req, userId, {
+            invoiceNumber: pending.invoiceMeta.number,
+            invoiceDate: pending.invoiceMeta.date,
+            paymentMethod: 'PayPal',
+            subtotal: pending.summary.subtotal,
+            taxAmount: pending.summary.taxAmount,
+            total: pending.summary.total
+          }, pending.items);
 
           const trackingNumber = buildTrackingNumber(pending.invoiceMeta.number);
           orderTracking.sendTracking({

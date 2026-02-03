@@ -63,6 +63,29 @@
       gap: 16px;
       margin-bottom: 32px;
     }
+    .filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 0 22px;
+    }
+    .filter-btn {
+      border: 1px solid rgba(255, 111, 163, 0.35);
+      background: #fff;
+      color: #a66384;
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .filter-btn.active,
+    .filter-btn:hover {
+      background: #ff6fa3;
+      color: #fff;
+      border-color: #ff6fa3;
+      box-shadow: 0 8px 16px rgba(255, 111, 163, 0.25);
+    }
     .stat-card {
       background: #fff;
       border-radius: 18px;
@@ -85,6 +108,59 @@
       font-size: 0.85rem;
       color: #9c6d87;
     }
+    .hero-intro {
+      background: linear-gradient(135deg, #f2f7ff 0%, #fff5ea 55%, #f3f8ff 100%);
+      border-radius: 22px;
+      padding: 1.5rem 2rem;
+      border: 1px solid rgba(255, 181, 90, .2);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-intro::after {
+      content: "";
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle at top right, rgba(255, 168, 102, .35), transparent 70%);
+      top: -80px;
+      right: -60px;
+      border-radius: 50%;
+    }
+    .hero-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .hero-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      color: #fff;
+      font-size: 1.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 25px rgba(245, 158, 11, .35);
+    }
+    .hero-text h2 { margin-bottom: .4rem; font-weight: 700; color: #101828; }
+    .hero-text p { margin: 0; color: #475467; }
+    .hero-badge {
+      background: rgba(245, 158, 11, .15);
+      color: #b45309;
+      padding: .25rem .85rem;
+      border-radius: 999px;
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
     .order-layout {
       display: flex;
       gap: 24px;
@@ -97,10 +173,11 @@
       position: sticky;
       top: 90px;
       align-self: flex-start;
-      background: #fff;
+      background: linear-gradient(180deg, #fff9fd, #ffe7f2);
       border-radius: 18px;
       padding: 20px;
       box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+      border: 1px solid rgba(255,255,255,0.6);
     }
     .order-sidebar h5 {
       font-weight: 700;
@@ -132,28 +209,40 @@
     .order-summary {
       background: #fff5fa;
       border-radius: 14px;
-      padding: 16px;
-      box-shadow: inset 0 0 0 1px rgba(255,111,163,0.15);
+      padding: 12px 18px;
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
       align-items: center;
+      justify-content: space-between;
     }
-    .summary-label {
+    .label {
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: #a66384;
       margin-bottom: 4px;
     }
-    .summary-value {
-      font-weight: 600;
-      font-size: 1rem;
+    .order-totals {
+      display: flex;
+      gap: 16px;
+      align-items: flex-end;
+      margin-left: auto;
     }
-    .summary-total {
+    .order-totals .value {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .order-totals .total-value {
       font-size: 1.2rem;
       font-weight: 700;
       color: #ff6fa3;
+    }
+    .orders-shell {
+      background: #fff;
+      border-radius: 26px;
+      padding: 1.5rem;
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.08);
     }
     .btn-outline-pink {
       border: 1px solid #ff6fa3;
@@ -162,6 +251,33 @@
     .btn-outline-pink:hover {
       background: #ff6fa3;
       color: #fff;
+    }
+    .payment-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+    .payment-badge.paypal {
+      background: #fff3c4;
+      color: #7a3b00;
+      border-color: #ffd27b;
+    }
+    .payment-badge.stripe {
+      background: #efe8ff;
+      color: #5b21b6;
+      border-color: #d7c7ff;
+    }
+    .payment-badge.nets {
+      background: #ffe0ef;
+      color: #9d174d;
+      border-color: #f9a8d4;
     }
     .order-status-bar {
       background: #fff8fb;
@@ -277,10 +393,14 @@
   <%- include('partials/user_navbar') %>
 
   <main class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <h2 class="fw-bold mb-0">My Orders</h2>
-        <p class="text-muted mb-0">Track your purchases and download invoices.</p>
+    <div class="hero-intro">
+      <div class="hero-left">
+        <div class="hero-icon" aria-hidden="true">📦</div>
+        <div class="hero-text">
+          <h2 class="mb-1">My Orders</h2>
+          <p>Track your purchases and download invoices.</p>
+        </div>
+        <span class="hero-badge">Orders</span>
       </div>
       <a href="/" class="btn btn-outline-secondary">Back to Home</a>
     </div>
@@ -306,25 +426,35 @@
         <a href="/UserProducts" class="btn btn-pink text-white mt-3 px-4" style="background-color:#ff6fa3;border:none;">Start Shopping</a>
       </div>
     <% } else { %>
-      <div class="order-layout">
-        <div class="order-content">
-          <div class="stats-row">
-            <div class="stat-card">
-              <small>Total Orders</small>
-              <p class="stat-value mb-1"><%= totalOrders %></p>
-              <p class="stat-note mb-0">All-time purchases</p>
-            </div>
-            <div class="stat-card">
-              <small>Spent This Month</small>
-              <p class="stat-value mb-1">$<%= monthSpent.toFixed(2) %></p>
-              <p class="stat-note mb-0">Orders placed in <%= now.toLocaleString('default', { month: 'long' }) %></p>
-            </div>
-            <div class="stat-card">
-              <small>Latest Status</small>
-              <p class="stat-value mb-1" style="font-size:1.2rem;"><%= latestStatus %></p>
-              <p class="stat-note mb-0">From your most recent order</p>
-            </div>
-          </div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <small>Total Orders</small>
+          <p class="stat-value mb-1"><%= totalOrders %></p>
+          <p class="stat-note mb-0">All-time purchases</p>
+        </div>
+        <div class="stat-card">
+          <small>Spent This Month</small>
+          <p class="stat-value mb-1">$<%= monthSpent.toFixed(2) %></p>
+          <p class="stat-note mb-0">Orders placed in <%= now.toLocaleString('default', { month: 'long' }) %></p>
+        </div>
+        <div class="stat-card">
+          <small>Latest Status</small>
+          <p class="stat-value mb-1" style="font-size:1.2rem;"><%= latestStatus %></p>
+          <p class="stat-note mb-0">From your most recent order</p>
+        </div>
+      </div>
+
+      <div class="filters-row" id="orderFilters">
+        <button class="filter-btn active" type="button" data-filter="all">All</button>
+        <button class="filter-btn" type="button" data-filter="On Hold">On Hold</button>
+        <button class="filter-btn" type="button" data-filter="In Process">In Process</button>
+        <button class="filter-btn" type="button" data-filter="Shipped">Shipped</button>
+        <button class="filter-btn" type="button" data-filter="Delivered">Delivered</button>
+      </div>
+
+      <div class="orders-shell">
+        <div class="order-layout">
+          <div class="order-content">
 
       <% orders.forEach(function(order) { 
           const derivedSubtotal = (order.items || []).reduce(function(sum, item) {
@@ -335,6 +465,12 @@
           const gstAmount = (typeof order.taxAmount === 'number' ? Number(order.taxAmount) : orderSubtotal * gstRate);
           const orderTotal = (typeof order.total === 'number' ? Number(order.total) : orderSubtotal + gstAmount);
           const paymentLabel = (order.payment_method || order.paymentMethod || '');
+          const paymentKey = paymentLabel
+            ? String(paymentLabel).toLowerCase()
+            : (order.paypal_capture_id ? 'paypal' : 'nets');
+          const paymentClass = paymentKey.includes('stripe')
+            ? 'stripe'
+            : (paymentKey.includes('paypal') ? 'paypal' : 'nets');
           const contactLabel = (order.contact || (user && user.contact) || '');
           const statusSteps = ['On Hold', 'In Process', 'Shipped', 'Delivered'];
           const statusIcons = ['📦', '🛠️', '🚚', '✅'];
@@ -349,6 +485,7 @@
       %>
         <div class="order-card"
              tabindex="0"
+             data-order-number="<%= order.displayNumber || order.id %>"
              data-invoice="<%= order.invoiceNumber %>"
              data-status="<%= currentStatus %>"
              data-subtotal="<%= orderSubtotal.toFixed(2) %>"
@@ -372,9 +509,11 @@
             <div class="text-end">
               <p class="text-muted mb-1">Total Paid</p>
               <h4 class="text-pink mb-0" style="color:#ff6fa3;">$<%= Number(order.total || 0).toFixed(2) %></h4>
-              <% if (paymentLabel) { %>
-                <small class="text-muted">Payment: <%= String(paymentLabel).toUpperCase() %></small>
-              <% } %>
+              <div class="mt-2">
+                <span class="payment-badge <%= paymentClass %>">
+                  <%= paymentLabel ? String(paymentLabel).toUpperCase() : (order.paypal_capture_id ? 'PAYPAL' : 'NETS') %>
+                </span>
+              </div>
             </div>
           </div>
 
@@ -417,29 +556,36 @@
 
           <div class="order-summary mt-3">
             <div>
-              <div class="summary-label">Actions</div>
+              <div class="label">Actions</div>
               <a class="btn btn-outline-pink btn-sm" href="/orders/<%= order.id %>/invoice">View Invoice</a>
+              <form action="/orders/<%= order.id %>/reorder" method="POST" class="d-inline">
+                <button type="submit" class="btn btn-outline-pink btn-sm ms-2">Buy again</button>
+              </form>
             </div>
-            <div class="ms-auto d-flex flex-wrap gap-3">
+            <div class="order-totals">
               <div>
-                <div class="summary-label">Subtotal</div>
-                <div class="summary-value">$<%= orderSubtotal.toFixed(2) %></div>
+                <div class="label">Subtotal</div>
+                <div class="value">$<%= orderSubtotal.toFixed(2) %></div>
               </div>
               <div>
-                <div class="summary-label">GST (9%)</div>
-                <div class="summary-value">$<%= gstAmount.toFixed(2) %></div>
+                <div class="label">GST (9%)</div>
+                <div class="value">$<%= gstAmount.toFixed(2) %></div>
               </div>
               <div>
-                <div class="summary-label">Grand Total</div>
-                <div class="summary-total">$<%= orderTotal.toFixed(2) %></div>
+                <div class="label">Grand Total</div>
+                <div class="total-value">$<%= orderTotal.toFixed(2) %></div>
               </div>
             </div>
           </div>
         </div>
       <% }); %>
-        </div>
-        <aside class="order-sidebar" id="orderSidebar">
+          </div>
+          <aside class="order-sidebar" id="orderSidebar">
           <h5 class="mb-3">Order Overview</h5>
+          <div class="sidebar-item">
+            <div class="sidebar-label">Order</div>
+            <div class="sidebar-value" data-field="order-number">Select an order</div>
+          </div>
           <div class="sidebar-item">
             <div class="sidebar-label">Invoice</div>
             <div class="sidebar-value" data-field="invoice">Select an order</div>
@@ -469,7 +615,8 @@
             <div class="sidebar-value" data-field="contact">â€”</div>
           </div>
           <a class="btn btn-outline-pink btn-sm w-100" data-field="link" href="#" target="_blank">View Invoice</a>
-        </aside>
+          </aside>
+        </div>
       </div>
     <% } %>
   </main>
@@ -481,19 +628,23 @@
       const sidebar = document.getElementById('orderSidebar');
       if (!sidebar) return;
 
-      const fields = {
-        invoice: sidebar.querySelector('[data-field="invoice"]'),
-        status: sidebar.querySelector('[data-field="status"]'),
-        subtotal: sidebar.querySelector('[data-field="subtotal"]'),
+    const fields = {
+      orderNumber: sidebar.querySelector('[data-field="order-number"]'),
+      invoice: sidebar.querySelector('[data-field="invoice"]'),
+      status: sidebar.querySelector('[data-field="status"]'),
+      subtotal: sidebar.querySelector('[data-field="subtotal"]'),
         gst: sidebar.querySelector('[data-field="gst"]'),
         total: sidebar.querySelector('[data-field="total"]'),
         payment: sidebar.querySelector('[data-field="payment"]'),
         contact: sidebar.querySelector('[data-field="contact"]'),
-        link: sidebar.querySelector('[data-field="link"]')
-      };
+      link: sidebar.querySelector('[data-field="link"]')
+    };
 
       function updateSidebar(card) {
-        if (!card) return;
+      if (!card) return;
+      if (fields.orderNumber) {
+        fields.orderNumber.textContent = card.dataset.orderNumber || '—';
+      }
         fields.invoice.textContent = card.dataset.invoice || '—';
         fields.status.textContent = card.dataset.status || 'On Hold';
         fields.subtotal.textContent = '$' + (card.dataset.subtotal || '0.00');
@@ -520,6 +671,35 @@
       if (cards.length) {
         updateSidebar(cards[0]);
       }
+    })();
+  </script>
+  <script>
+    (function () {
+      const filterBar = document.getElementById('orderFilters');
+      if (!filterBar) return;
+
+      const buttons = Array.from(filterBar.querySelectorAll('.filter-btn'));
+      const cards = Array.from(document.querySelectorAll('.order-card'));
+
+      function setActive(btn) {
+        buttons.forEach((button) => button.classList.toggle('active', button === btn));
+      }
+
+      function applyFilter(value) {
+        const target = value === 'all' ? null : value;
+        cards.forEach((card) => {
+          const status = card.dataset.status || '';
+          const show = !target || status === target;
+          card.style.display = show ? '' : 'none';
+        });
+      }
+
+      filterBar.addEventListener('click', (event) => {
+        const btn = event.target.closest('.filter-btn');
+        if (!btn) return;
+        setActive(btn);
+        applyFilter(btn.dataset.filter);
+      });
     })();
   </script>
 </body>

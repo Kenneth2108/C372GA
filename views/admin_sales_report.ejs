@@ -94,6 +94,20 @@
       background: #ff6fa3;
       color: #fff;
     }
+    .report-actions .btn {
+      min-width: 110px;
+      height: 42px;
+      white-space: nowrap;
+    }
+    @media (max-width: 1200px) {
+      .report-actions {
+        flex-wrap: wrap;
+      }
+      .report-actions .btn {
+        flex: 1 1 calc(50% - 8px);
+        min-width: 0;
+      }
+    }
     @media (max-width: 992px) {
       .charts-grid {
         flex-direction: column;
@@ -115,17 +129,19 @@
 
     <div class="page-shell">
       <form class="row g-3 mb-4" method="GET" action="/admin/reports/sales">
-        <div class="col-md-4">
+        <div class="col-lg-3 col-md-6">
           <label class="form-label small text-muted mb-1">Start date</label>
           <input type="date" class="form-control" name="start" value="<%= range.startStr %>">
         </div>
-        <div class="col-md-4">
+        <div class="col-lg-3 col-md-6">
           <label class="form-label small text-muted mb-1">End date</label>
           <input type="date" class="form-control" name="end" value="<%= range.endStr %>">
         </div>
-        <div class="col-md-4 d-flex align-items-end gap-2">
-          <button class="btn btn-outline-pink w-100" type="submit">Apply Filter</button>
-          <a class="btn btn-outline-secondary w-100" href="/admin/reports/sales">Reset</a>
+        <div class="col-lg-6 d-flex align-items-end gap-2 report-actions">
+          <button class="btn btn-outline-pink" type="submit">Apply Filter</button>
+          <a class="btn btn-outline-secondary" href="/admin/reports/sales.csv?start=<%= range.startStr %>&end=<%= range.endStr %>">Export CSV</a>
+          <button class="btn btn-outline-secondary" type="button" onclick="window.print()">Print</button>
+          <a class="btn btn-outline-secondary" href="/admin/reports/sales">Reset</a>
         </div>
       </form>
 
@@ -245,6 +261,18 @@
     const dailyLabels = <%- JSON.stringify((dailyStats || []).map(row => row.day)) %>;
     const prettyDate = (value) => {
       if (!value) return '';
+      if (typeof value === 'string') {
+        const parts = value.slice(0, 10).split('-');
+        if (parts.length === 3) {
+          const year = Number(parts[0]);
+          const month = Number(parts[1]) - 1;
+          const day = Number(parts[2]);
+          const localDate = new Date(year, month, day);
+          if (!Number.isNaN(localDate.getTime())) {
+            return localDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+          }
+        }
+      }
       const date = new Date(value);
       if (Number.isNaN(date.getTime())) return String(value);
       return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });

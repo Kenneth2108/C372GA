@@ -1,5 +1,7 @@
 const Orders = require('../models/orderModel');
 const orderTracking = require('./paypalTrackingController');
+const CartItems = require('../models/CartItem');
+const { sendOrderInvoiceEmail } = require('../services/orderInvoiceEmailService');
 
 const ORDER_STATUSES = [
   'On Hold',
@@ -40,6 +42,65 @@ exports.listUserOrders = function (req, res) {
       user: userSession,
       orders: numbered
     });
+  });
+};
+
+exports.reorderOrder = function (req, res) {
+  const userSession = req.session && req.session.user;
+  const userId = userSession && (userSession.userId || userSession.id);
+  const orderId = parseInt(req.params.id, 10);
+
+  if (!userId || isNaN(orderId)) {
+    req.flash('error', 'Invalid reorder request.');
+    return res.redirect('/orders');
+  }
+
+  Orders.getById(orderId, function (err, order) {
+    if (err) {
+      console.error('Reorder fetch error:', err);
+      req.flash('error', 'Unable to reorder items right now.');
+      return res.redirect('/orders');
+    }
+
+    if (!order || order.user_id !== userId) {
+      req.flash('error', 'Order not found.');
+      return res.redirect('/orders');
+    }
+
+    const items = order.items || [];
+    if (!items.length) {
+      req.flash('error', 'No items found to reorder.');
+      return res.redirect('/orders');
+    }
+
+    const queue = items.slice();
+
+    function addNext() {
+      if (!queue.length) {
+        req.flash('success', 'Items added to your cart.');
+        return res.redirect('/cart');
+      }
+
+      const item = queue.shift();
+      const productId = item.product_id;
+      const qty = Number(item.quantity) || 0;
+      const price = Number(item.price) || 0;
+
+      if (!productId || qty <= 0) {
+        return addNext();
+      }
+
+      CartItems.add(userId, productId, qty, price, function (addErr) {
+        if (addErr) {
+          console.error('Reorder add error:', addErr);
+          req.flash('error', 'Some items could not be added to your cart.');
+          return res.redirect('/cart');
+        }
+        addNext();
+      });
+    }
+
+    addNext();
   });
 };
 
@@ -188,8 +249,88 @@ exports.showAdminInvoice = function (req, res) {
       paymentMethod,
       adminView: true,
       backLink: '/admin/orders',
-      backLabel: 'Back to Orders'
+      backLabel: 'Back to Orders',
+      orderId: order.id,
+      success: req.flash('success'),
+      error: req.flash('error')
     });
+  });
+};
+
+
+exports.sendAdminInvoiceEmail = function (req, res) {
+  const orderId = parseInt(req.params.id, 10);
+  if (isNaN(orderId)) {
+    req.flash('error', 'Invalid order ID.');
+    return res.redirect('/admin/orders');
+  }
+
+  Orders.getById(orderId, function (err, order) {
+    if (err) {
+      console.error('Admin invoice email fetch error:', err);
+      req.flash('error', 'Unable to send invoice email.');
+      return res.redirect('/admin/orders');
+    }
+
+    if (!order) {
+      req.flash('error', 'Order not found.');
+      return res.redirect('/admin/orders');
+    }
+
+    if (!order.email) {
+      req.flash('error', 'Customer email not available.');
+      return res.redirect(`/admin/orders/${orderId}/invoice`);
+    }
+
+    const items = (order.items || []).map((item) => ({
+      productName: item.product_name,
+      product_id: item.product_id,
+      price: Number(item.price || 0),
+      quantity: Number(item.quantity || 0),
+      lineTotal: Number(item.line_total || 0)
+    }));
+
+    const subtotal = order.subtotal != null ? Number(order.subtotal) : items.reduce((sum, item) => sum + item.lineTotal, 0);
+    const taxRate = 0.09;
+    const taxAmount = order.taxAmount != null ? Number(order.taxAmount) : subtotal * taxRate;
+    const summary = {
+      subtotal,
+      taxRate,
+      taxAmount,
+      total: order.total != null ? Number(order.total) : subtotal + taxAmount
+    };
+
+    const invoiceMeta = {
+      number: order.invoice_number,
+      date: order.created_at ? new Date(order.created_at) : new Date()
+    };
+
+    const rawPayment = order.payment_method || order.paymentMethod || '';
+    const paymentMethod = rawPayment
+      ? String(rawPayment)
+      : (order.paypal_capture_id ? 'PayPal' : 'NETS');
+
+    const orderPayload = {
+      invoiceNumber: invoiceMeta.number,
+      invoiceDate: invoiceMeta.date,
+      paymentMethod: paymentMethod,
+      subtotal: summary.subtotal,
+      taxAmount: summary.taxAmount,
+      total: summary.total,
+      customerName: order.username || null,
+      customerPhone: order.contact || null
+    };
+
+    sendOrderInvoiceEmail({ order: orderPayload, items, to: order.email })
+      .then(() => {
+        req.flash('success', 'Invoice email sent.');
+        return res.redirect(`/admin/orders/${orderId}/invoice`);
+      })
+      .catch((mailErr) => {
+        console.error('Admin invoice email send error:', mailErr);
+        req.flash('error', 'Unable to send invoice email.');
+        return res.redirect(`/admin/orders/${orderId}/invoice`);
+      });
   });
 };
 

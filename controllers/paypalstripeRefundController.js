@@ -4,6 +4,7 @@ const productModel = require("../models/productModel");
 const refundItemModel = require("../models/refundItemModel");
 const paypalRefund = require("../services/paypalRefund");
 const stripeRefund = require("../services/stripeRefund");
+const { sendRefundInvoiceEmail } = require("../services/refundInvoiceEmailService");
 
 function view(res, name, data = {}) {
   return res.render(name, { ...data, user: res.locals.user });
@@ -50,6 +51,58 @@ function formatPaypalError(result) {
 function parsePaypalAmount(value) {
   const num = Number(value);
   return Number.isFinite(num) ? num : null;
+}
+
+function formatPaymentMethodLabel(method) {
+  const normalized = String(method || '').toLowerCase();
+  if (normalized === 'stripe') return 'Stripe';
+  if (normalized === 'paypal') return 'PayPal';
+  if (normalized === 'nets') return 'NETS';
+  return method || 'Unknown';
+}
+
+function buildRefundEmailItems(refundSelections, itemMap) {
+  return (refundSelections || []).map((item) => {
+    const orderItem = itemMap.get(String(item.productId)) || {};
+    return {
+      productId: item.productId,
+      productName: orderItem.product_name || orderItem.productName || null,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice
+    };
+  });
+}
+
+function queueRefundInvoiceEmail(refundId, refundSelections, itemMap, paymentMethod) {
+  refundModel.getById(refundId, (refundErr, refund) => {
+    if (refundErr || !refund) {
+      if (refundErr) {
+        console.error("Refund email lookup error:", refundErr);
+      }
+      return;
+    }
+
+    const refundItems = buildRefundEmailItems(refundSelections, itemMap);
+    const email = refund.email ? String(refund.email) : null;
+    if (!email) {
+      return;
+    }
+
+    (async () => {
+      try {
+        await sendRefundInvoiceEmail({
+          refund: {
+            ...refund,
+            paymentMethod: paymentMethod
+          },
+          refundItems,
+          to: email
+        });
+      } catch (mailErr) {
+        console.error("Refund invoice email failed:", mailErr);
+      }
+    })();
+  });
 }
 
 module.exports = {
@@ -302,6 +355,8 @@ module.exports = {
                     return res.redirect("/admin/orders");
                   }
 
+                  queueRefundInvoiceEmail(refundId, refundSelections, itemMap, formatPaymentMethodLabel(paymentMethod));
+
                   if (!restockItems.length) {
                     return res.redirect("/admin/orders");
                   }
@@ -365,6 +420,8 @@ module.exports = {
                     req.session.messages = ["Refund sent, but failed to store item history."];
                     return res.redirect("/admin/orders");
                   }
+
+                  queueRefundInvoiceEmail(refundId, refundSelections, itemMap, formatPaymentMethodLabel(paymentMethod));
 
                   if (!restockItems.length) {
                     return res.redirect("/admin/orders");
