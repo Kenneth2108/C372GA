@@ -180,5 +180,17 @@
   </style>
 
   <%- include('partials/footer') %>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('tr.row-link').forEach(function (row) {
+        row.addEventListener('click', function (e) {
+          if (e.target.closest('.no-row-nav') || e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
+          window.location.href = row.dataset.href;
+        });
+      });
+    });
+  </script>
 </body>
 </html>

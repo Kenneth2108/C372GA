@@ -52,16 +52,7 @@
 <body>
 
   <!-- NAVBAR -->
-  <nav class="navbar navbar-expand-lg">
-    <div class="container d-flex justify-content-between">
-      <a class="navbar-brand" href="/">🐾 FluffyFriend</a>
-      <div>
-        <a class="nav-link d-inline" href="/admin">Admin</a>
-        <a class="nav-link d-inline" href="/admin/products">Products</a>
-        <a class="nav-link d-inline" href="/logout">Logout</a>
-      </div>
-    </div>
-  </nav>
+  <%- include('../partials/admin_navbar') %>
 
   <main>
     <!-- FLASH MESSAGES -->
@@ -150,6 +141,18 @@
       // Prevent double submission
       submitBtn.disabled = true;
       submitBtn.textContent = "Submitting...";
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('tr.row-link').forEach(function (row) {
+        row.addEventListener('click', function (e) {
+          if (e.target.closest('.no-row-nav') || e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
+          window.location.href = row.dataset.href;
+        });
+      });
     });
   </script>
 
