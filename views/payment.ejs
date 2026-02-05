@@ -556,7 +556,7 @@
   <%- include('partials/footer') %>
 
   <script src="https://js.stripe.com/v3/"></script>
-  <script id="paypal-sdk" src="https://www.paypal.com/sdk/js?client-id=<%= paypalClientId %>&currency=SGD"></script>
+  <script id="paypal-sdk" src="https://www.paypal.com/sdk/js?client-id=<%= paypalClientId %>&currency=SGD&disable-funding=card"></script>
   <script>
     (function() {
       var paypalClientId = '<%= paypalClientId %>';
