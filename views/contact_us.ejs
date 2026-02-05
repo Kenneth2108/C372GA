@@ -30,27 +30,26 @@
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg">
-    <div class="container">
-      <a class="navbar-brand" href="/">🐾 FluffyFriend</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ffNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="ffNav">
-        <ul class="navbar-nav ms-auto">
-          <% if (user) { %>
-            <li class="nav-item"><a class="nav-link" href="/UserProducts">View All Products</a></li>
-            <li class="nav-item"><a class="nav-link" href="/cart">Go To Cart</a></li>
-            <li class="nav-item"><a class="nav-link" href="/orders">My Orders</a></li>
-            <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
-          <% } else { %>
+  <% if (user && (user.role === 'admin' || user.role === 'master')) { %>
+    <%- include('partials/admin_navbar') %>
+  <% } else if (user && user.role === 'user') { %>
+    <%- include('partials/user_navbar') %>
+  <% } else { %>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="/">FluffyFriend</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ffNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="ffNav">
+          <ul class="navbar-nav ms-auto">
             <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
             <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
-          <% } %>
-        </ul>
+          </ul>
+        </div>
       </div>
-    </div>
-  </nav>
+    </nav>
+  <% } %>
 
   <main class="py-5">
     <div class="container contact-wrapper">
@@ -67,7 +66,7 @@
               <h6 class="fw-bold mb-1">Call us</h6>
               <p class="text-muted small mb-2">Talk to a FluffyFriend helper.</p>
               <a class="btn cta-btn px-4" href="tel:+6592332933">+65 92332933</a>
-              <p class="text-muted small mb-0 mt-2">Hours: Mon–Fri, 9am–6pm</p>
+              <p class="text-muted small mb-0 mt-2">Hours: Monâ€“Fri, 9amâ€“6pm</p>
             </div>
           </div>
           <div class="col-md-6">

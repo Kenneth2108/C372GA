@@ -342,6 +342,38 @@
     #stripe-status {
       min-height: 20px;
     }
+    .payment-status-box {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #f5b3cd;
+      background: #fff0f7;
+      color: #a3134f;
+      font-weight: 600;
+      font-size: 0.92rem;
+      line-height: 1.35;
+      min-height: 46px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+    .payment-status-box.show {
+      display: flex;
+    }
+    .payment-status-box::before {
+      content: "!";
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #ff6fa3;
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
     .fade-in {
       opacity: 0;
       transform: translateY(12px);
@@ -440,7 +472,7 @@
           <div class="provider-actions">
             <div id="paypal-button-container"></div>
           </div>
-          <div id="payment-status" class="text-danger small" role="alert"></div>
+          <div id="payment-status" class="payment-status-box" role="alert" aria-live="assertive"></div>
         </div>
 
         <div class="card-panel payment-card fade-in delay-2">
@@ -457,7 +489,7 @@
           <button id="stripe-checkout-btn" type="button" class="btn btn-provider stripe w-100">
             Pay with Card
           </button>
-          <div id="stripe-status" class="text-danger small mt-2" role="alert"></div>
+          <div id="stripe-status" class="payment-status-box" role="alert" aria-live="assertive"></div>
         </div>
 
         <div class="card-panel summary-panel fade-in delay-3">
@@ -535,12 +567,15 @@
       var paypalRendered = false;
 
       function setStatus(message) {
+        if (!statusEl) return;
         statusEl.textContent = message || '';
+        statusEl.classList.toggle('show', Boolean(message));
       }
 
       function setStripeStatus(message) {
         if (stripeStatusEl) {
           stripeStatusEl.textContent = message || '';
+          stripeStatusEl.classList.toggle('show', Boolean(message));
         }
       }
 
